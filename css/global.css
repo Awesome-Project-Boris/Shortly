@@ -1,0 +1,75 @@
+header.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1030; /* above most page content but below any modals */
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+}
+
+.main {
+  margin-top: 3rem;
+}
+
+header.navbar .container {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+header.navbar .search-input {
+  flex-grow: 1;
+  margin: 0 1rem;
+}
+
+header.navbar .btn {
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Offcanvas panel scroll & sizing */
+.offcanvas {
+  width: 300px;
+}
+.offcanvas-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Section headers inside offcanvas */
+.offcanvas-body h6 {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* Friend‐request and friend cards */
+.friend-request-card,
+.friend-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+.friend-request-card img,
+.friend-card img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.friend-request-info,
+.friend-info {
+  flex-grow: 1;
+  margin: 0 0.5rem;
+}
+.friend-request-actions button {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}

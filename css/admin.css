@@ -1,0 +1,49 @@
+/* admin.css */
+
+/* Section header (reuse global style) */
+/* No overrides needed if indexStyles.css is loaded first */
+
+/* Table card container */
+.table-card {
+  max-width: 1400px;
+  margin: 0 auto 3rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* DataTable cells */
+.table-card table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table-card th,
+.table-card td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+.table-card tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.table-card tbody tr + tr {
+  border-top: 1px solid #e0e0e0;
+}
+.table-card td {
+  font-size: 0.95rem;
+}
+
+/* Delete button */
+.delete-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Section title color override (if needed) */
+.section-title {
+  color: #444;
+}
+.divider {
+  background-color: #ddd;
+}

@@ -1,0 +1,153 @@
+/* ─────────────────────────────────────────────
+   Base & Background
+───────────────────────────────────────────── */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+}
+
+/* ─────────────────────────────────────────────
+     Navbar & Search
+  ───────────────────────────────────────────── */
+.navbar {
+  background-color: #fff !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.search-form {
+  flex-grow: 1;
+  margin: 0 1.5rem;
+}
+.search-form .form-control {
+  height: 36px;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────
+     Soft Buttons
+  ───────────────────────────────────────────── */
+.btn {
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+.btn-primary {
+  background-color: #66b2ff;
+  border-color: #66b2ff;
+}
+.btn-secondary {
+  background-color: #9eaec8;
+  border-color: #9eaec8;
+  color: #fff;
+}
+.btn-primary:hover {
+  background-color: #3399ff !important;
+}
+.btn-secondary:hover {
+  background-color: #7d8ea8 !important;
+}
+
+/* ─────────────────────────────────────────────
+     Title & Subtitle
+  ───────────────────────────────────────────── */
+.main-title {
+  font-size: 4rem;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+.subtitle {
+  font-size: 1.25rem;
+  color: #6c757d;
+  max-width: 600px;
+  margin: 0 auto 4rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+     Action Buttons Row
+  ───────────────────────────────────────────── */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 6rem;
+}
+
+/* ─────────────────────────────────────────────
+     Table “Card” + Row Definition
+  ───────────────────────────────────────────── */
+.table-card {
+  max-width: 1400px;
+  margin: 0 auto 3rem;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.table-card table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table-card thead {
+  background-color: #e9f5ff;
+}
+.table-card thead th {
+  border: none;
+  font-size: 1rem;
+  color: #000;
+  padding: 1rem;
+}
+.table-card tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.table-card tbody tr + tr {
+  border-top: 1px solid #e0e0e0;
+}
+.table-card td {
+  padding: 1rem;
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+/* Section header above the table */
+.section-header {
+  text-align: center;
+  margin: 2rem 0 1rem;
+}
+
+.section-title {
+  font-size: 1.75rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+/* Soft divider line */
+.divider {
+  width: 60%;
+  max-width: 500px;
+  height: 1px;
+  margin: 0 auto;
+  border: none;
+  background-color: #ddd;
+}
+
+/* ─────────────────────────────────────────────
+     Responsive Tweaks
+  ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 2.5rem;
+  }
+  .search-form {
+    order: 2;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}

@@ -1,0 +1,87 @@
+/* social.css */
+
+/* Card wrapper */
+.table-card {
+  max-width: 900px;
+  margin: 0 auto 3rem;
+  padding: 1rem;
+}
+
+/* Bounce animation */
+@keyframes bounceEffect {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* User card */
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+
+  /* prepare for animation */
+  animation-duration: 0.4s;
+  animation-fill-mode: both;
+}
+.user-card:last-child {
+  border-bottom: none;
+}
+.user-card:hover {
+  animation-name: bounceEffect;
+}
+.user-card:active {
+  animation-name: bounceEffect;
+  animation-duration: 0.2s;
+}
+
+/* Profile pic */
+.user-card img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Username link style */
+.username {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #007bff;
+}
+
+/* Links count text */
+.links-count {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+/* “No users found” card uses same style */
+.user-card.no-users {
+  justify-content: center;
+  color: #6c757d;
+}
+
+/* Search input styling (optional tweaks) */
+#userSearchInput {
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+#userSearchBtn {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  padding: 2rem 0;
+}
+
+.input-group {
+  gap: 25px;
+}

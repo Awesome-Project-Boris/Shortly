@@ -1,0 +1,49 @@
+/* new_item.css */
+
+/* CARD WRAPPER – reuse the “table-card” style */
+.form-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* HIDE password row until needed */
+.password-group {
+  display: none;
+}
+
+/* ERROR MESSAGES */
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Tweak form-label spacing */
+.form-label {
+  font-weight: 500;
+}
+
+/* Real-time valid/invalid borders */
+.form-control.is-valid {
+  border-color: #198754 !important; /* Bootstrap success green */
+  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+.form-control.is-invalid {
+  border-color: #dc3545 !important; /* Bootstrap danger red */
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Character counter styling */
+.counter {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+.counter.exceeded {
+  color: #dc3545 !important;
+}
+
+/* Keep existing rules for error-message etc. */
