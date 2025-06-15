@@ -69,15 +69,15 @@ def lambda_handler(event, context):
         }
     }
 
-def create_test_event():
-    return {
-        'pathParameters': {
-            'code': 'J6GbhU6w'
-        },
-        'queryStringParameters': {
-            'userID': '456'
-        }
-    }
+# def create_test_event():
+#     return {
+#         'pathParameters': {
+#             'code': 'J6GbhU6w'
+#         },
+#         'queryStringParameters': {
+#             'userID': '456'
+#         }
+#     }
     
-if __name__ == "__main__":
-    print(lambda_handler(create_test_event(), None))
+# if __name__ == "__main__":
+#     print(lambda_handler(create_test_event(), None))

@@ -6,11 +6,11 @@ from datetime import datetime
 import boto3
 
 # Initialize DynamoDB table from environment variables
-TABLE_NAME = os.environ['LINKS_TABLE']
-DOMAIN = os.environ.get('URL_DOMAIN', 'https://short.ly')
+TABLE_name = "Links"
+DOMAIN = 'https://short.ly'
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_NAME)
+table = dynamodb.Table(TABLE_name)
 
 
 def generate_code(length: int = 8) -> str:
@@ -51,34 +51,46 @@ def lambda_handler(event, context):
     # Generate a unique short code, retrying on collisions
     code = generate_code()
     while True:
-        resp = table.get_item(Key={'LinkId': code})
+        resp = table.get_item(Key={'linkID': code})
         if 'Item' not in resp:
             break
         code = generate_code()
 
     # Prepare item to store
     item = {
-        'LinkId': code,
-        'String': long_url,
-        'Name': name,
-        'Description': description,
-        'IsPrivate': is_private,
-        'IsPasswordProtected': is_password_protected,
-        'Password': password,
-        'NumberOfClicks': 0,
-        'Date': datetime.utcnow().isoformat()
+        'linkID': code,
+        'string': long_url,
+        'name': name,
+        'description': description,
+        'isPrivate': is_private,
+        'isPasswordProtected': is_password_protected,
+        'password': password,
+        'numberOfClicks': 0,
+        'date': datetime.utcnow().isoformat()
     }
 
     # Write to DynamoDB
     table.put_item(Item=item)
 
     # Construct the short URL
-    short_url = f"{DOMAIN}/r/{code}"
+    # short_url = f"{DOMAIN}/r/{code}"
 
     # Return response
     return {
         'statusCode': 200,
         'headers': {'Content-Type': 'application/json'},
-        'body': json.dumps({'shortUrl': short_url})
+        'body': json.dumps({'code': code})
     }
 
+test_event = {
+    'body': json.dumps({
+        'url': 'https://www.example.com/url/that/needs/shortening/too',
+        'name': 'Example Link',
+        'description': 'This is a test link',
+        'isPrivate': True,
+        'isPasswordProtected': True,
+        'password': 'secretpassword123'
+    })
+}
+if __name__ == "__main__":
+    print(lambda_handler(test_event, None))
