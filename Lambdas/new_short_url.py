@@ -29,6 +29,11 @@ def lambda_handler(event, context):
     except (json.JSONDecodeError, KeyError):
         return {
             'statusCode': 400,
+            'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST'
+            }, 
             'body': json.dumps({'error': 'Request must be JSON with a "url" field.'})
         }
 
@@ -43,6 +48,11 @@ def lambda_handler(event, context):
     if is_password_protected and not password:
         return {
             'statusCode': 400,
+            'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST'
+            },
             'body': json.dumps({'error': 'Password must be provided when isPasswordProtected is true.'})
         }
     if not is_password_protected:
@@ -78,7 +88,12 @@ def lambda_handler(event, context):
     # Return response
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
+            'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST',
+            'Content-Type': 'application/json'
+            },
         'body': json.dumps({'code': code})
     }
 

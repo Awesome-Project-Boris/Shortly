@@ -37,6 +37,11 @@ def lambda_handler(event, context):
     if not item:
         return {
             'statusCode': 404,
+            'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET'
+            },
             'body': json.dumps({'error': 'Link not found.'})
         }
 
@@ -65,6 +70,9 @@ def lambda_handler(event, context):
     return {
         'statusCode': 301,
         'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET',
             'Location': item['String']
         }
     }
