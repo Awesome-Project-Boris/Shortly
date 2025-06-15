@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    />
     <title>Shortly</title>
 
     <link
@@ -13,13 +16,20 @@
 
     <link
       rel="stylesheet"
-      href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css"
+      href="https://unpkg.com/bootstrap-table@1.21.1/dist/bootstrap-table.min.css"
     />
 
-    <link rel="stylesheet" href="../css/indexStyles.css" />
     <link rel="stylesheet" href="../css/global.css" />
+    <link rel="stylesheet" href="../css/indexStyles.css" />
+
+    <link
+      rel="preload"
+      as="image"
+      href="../media/lock.png"
+    />
 
     <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script
       defer
       src="https://code.jquery.com/jquery-3.6.0.min.js"
@@ -28,81 +38,102 @@
     ></script>
     <script
       defer
-      src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"
-    ></script>
-    <script
-      defer
-      src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"
-    ></script>
-    <script
-      defer
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
       crossorigin="anonymous"
     ></script>
+    <script
+      defer
+      src="https://unpkg.com/bootstrap-table@1.21.1/dist/bootstrap-table.min.js"
+    ></script>
 
-    <!-- Mock data (users, friends, groups) -->
     <script defer src="../script/mockUsers.js"></script>
     <script defer src="../script/global.js"></script>
     <script defer src="../script/index.js"></script>
   </head>
 
   <body>
-    <header
-      class="navbar navbar-expand-lg navbar-light bg-light shadow-sm"
-    ></header>
+    <header class="navbar navbar-expand-lg navbar-light bg-light shadow-sm"></header>
 
-    <main class="main container py-5 text-center">
-      <h1 class="main-title text-primary">Shortly</h1>
-      <p class="subtitle">
+    <main class="main container py-5">
+      <h1 class="main-title text-primary text-center">Shortly</h1>
+      <p class="subtitle text-center">
         Lorem ipsum dolor sit amet consectetur adipisicing elit.
       </p>
 
-      <div class="action-buttons">
-        <button id="newLinkBtn" class="btn btn-primary">
+      <div class="action-buttons text-center mb-4">
+        <button id="newLinkBtn" class="btn btn-primary me-2">
           Shortify new link
         </button>
-        <button id="friendsBtn" class="btn btn-secondary">Friends</button>
-        <button id="shareLinkBtn" class="btn btn-secondary">Share Link</button>
+        <button id="friendsBtn" class="btn btn-secondary me-2">
+          Friends
+        </button>
+        <button id="shareLinkBtn" class="btn btn-secondary me-2">
+          Share Link
+        </button>
         <button id="createGroupBtn" class="btn btn-secondary">
           Create Group
         </button>
       </div>
 
-      <div class="section-header">
+      <div class="section-header mb-2">
         <h2 class="section-title">Public links</h2>
         <hr class="divider" />
       </div>
 
-      <div class="table-card">
-        <table id="linksTable" class="table table-striped table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Link name</th>
-              <th>Description</th>
-              <th>Link</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Skibidi link</td>
-              <td>Short version for the boys</td>
-              <td>Shortify/skibibooi</td>
-            </tr>
-            <tr>
-              <td>Short google link</td>
-              <td>short link for google</td>
-              <td>Shortify/gkfdgoijkglfgjfv43624355…hqhlodyrxbn</td>
-            </tr>
-            <tr>
-              <td>Item 3</td>
-              <td>Description for item 3</td>
-              <td>Shortify/yalla</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-card mb-5">
+        <!-- bootstrap-table -->
+        <table
+          id="linksTable"
+          class="table"
+        ></table>
       </div>
     </main>
 
+    <!-- Link Access Modal -->
+    <div
+      class="modal fade"
+      id="linkAccessModal"
+      tabindex="-1"
+      aria-labelledby="linkAccessLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="linkAccessLabel" class="modal-title"></h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="accessDescription"></p>
+            <div id="passwordGroup" class="mb-3" style="display:none">
+              <label for="accessPassword" class="form-label">Password</label>
+              <input
+                type="password"
+                id="accessPassword"
+                class="form-control"
+                placeholder="Enter password"
+              />
+              <small id="accessError" class="text-danger"></small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="goToLinkBtn"
+              type="button"
+              class="btn btn-primary"
+            >
+              Go to Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Group Modal -->
     <div
       class="modal fade"
       id="createGroupModal"
@@ -113,19 +144,21 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="createGroupLabel">Create Group</h5>
+            <h5 id="createGroupLabel" class="modal-title">
+              Create Group
+            </h5>
             <button
               type="button"
               class="btn-close"
               data-bs-dismiss="modal"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="createGroupForm">
-              <!-- Group Name -->
               <div class="mb-3">
-                <label for="groupName" class="form-label">Group Name</label>
+                <label for="groupName" class="form-label">
+                  Group Name
+                </label>
                 <input
                   type="text"
                   class="form-control"
@@ -135,13 +168,16 @@
                 />
                 <div class="d-flex justify-content-between mt-1">
                   <small id="groupNameError" class="text-danger"></small>
-                  <small id="groupNameCounter" class="text-muted">0/50</small>
+                  <small
+                    id="groupNameCounter"
+                    class="text-muted"
+                  >0/50</small>
                 </div>
               </div>
-
-              <!-- Emails -->
               <div class="mb-3">
-                <label class="form-label">Recipients (Emails)</label>
+                <label class="form-label">
+                  Recipients (Emails)
+                </label>
                 <div class="input-group mb-2">
                   <input
                     type="email"
@@ -160,16 +196,21 @@
                 <div id="groupEmailList" class="d-flex flex-wrap gap-2"></div>
                 <small id="groupEmailError" class="text-danger"></small>
               </div>
-
-              <!-- Friends -->
               <div class="mb-3">
-                <label class="form-label">Recipients (Friends)</label>
-                <div id="groupFriendsList" class="d-flex flex-wrap gap-2"></div>
-                <small id="groupFriendsError" class="text-danger"></small>
+                <label class="form-label">
+                  Recipients (Friends)
+                </label>
+                <div
+                  id="groupFriendsList"
+                  class="d-flex flex-wrap gap-2"
+                ></div>
+                <small
+                  id="groupFriendsError"
+                  class="text-danger"
+                ></small>
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="button"
@@ -198,20 +239,22 @@
       aria-labelledby="shareLinkLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+      >
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="shareLinkLabel">Share Link</h5>
+            <h5 id="shareLinkLabel" class="modal-title">
+              Share Link
+            </h5>
             <button
               type="button"
               class="btn-close"
               data-bs-dismiss="modal"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="shareLinkForm">
-              <!-- Link dropdown -->
               <div class="mb-3">
                 <label for="shareLinkSelect" class="form-label"
                   >Select Link</label
@@ -221,22 +264,32 @@
                 </select>
                 <small id="shareLinkError" class="text-danger"></small>
               </div>
-
-              <!-- Group checkboxes -->
               <div class="mb-3">
-                <label class="form-label">Select Groups (optional)</label>
-                <div id="shareGroupList" class="d-flex flex-wrap gap-2"></div>
-                <small id="shareGroupError" class="text-danger"></small>
+                <label class="form-label"
+                  >Select Groups (optional)</label
+                >
+                <div
+                  id="shareGroupList"
+                  class="d-flex flex-wrap gap-2"
+                ></div>
+                <small
+                  id="shareGroupError"
+                  class="text-danger"
+                ></small>
               </div>
-
-              <!-- Friend checkboxes -->
               <div class="mb-3">
-                <label class="form-label">Recipients (Friends)</label>
-                <div id="shareFriendsList" class="d-flex flex-wrap gap-2"></div>
-                <small id="shareFriendsError" class="text-danger"></small>
+                <label class="form-label"
+                  >Recipients (Friends)</label
+                >
+                <div
+                  id="shareFriendsList"
+                  class="d-flex flex-wrap gap-2"
+                ></div>
+                <small
+                  id="shareFriendsError"
+                  class="text-danger"
+                ></small>
               </div>
-
-              <!-- Email tags -->
               <div class="mb-3">
                 <label class="form-label">Or add Emails</label>
                 <div class="input-group mb-2">
@@ -254,12 +307,17 @@
                     Add
                   </button>
                 </div>
-                <div id="shareEmailList" class="d-flex flex-wrap gap-2"></div>
-                <small id="shareEmailError" class="text-danger"></small>
+                <div
+                  id="shareEmailList"
+                  class="d-flex flex-wrap gap-2"
+                ></div>
+                <small
+                  id="shareEmailError"
+                  class="text-danger"
+                ></small>
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="button"

@@ -40,7 +40,7 @@ function buildNavBar() {
         class="btn btn-outline-primary me-3 btn-lg"
         type="button"
         title="Friends & Requests"
-      >👥</button>
+      ><img src="../media/friend.png" width="16" alt="social"></button>
 
       <!-- Home button -->
       <button id="nav-home" class="btn btn-primary btn-lg me-3">
