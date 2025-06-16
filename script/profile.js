@@ -105,130 +105,181 @@ $(document).ready(async function () {
   //   isPublic:        true|false
   // }
 
-  const linkModal = new bootstrap.Modal($("#linkDetailModal"));
-  let selectedLinkId;
+  const linkModal = new bootstrap.Modal(document.getElementById('linkDetailModal'));
+let selectedLink = null; // Store the entire link object
+const currentUserID = localStorage.getItem("userID"); // Get the logged-in user's ID
 
-  // 6.1) Row‐click opens modal
-  $("#linksTable tbody").on("click", "tr", async function () {
-    const rowData = $("#linksTable").DataTable().row(this).data();
+// --- Open Modal on Row Click ---
+$('#linksTable tbody').on('click', 'tr', async function () {
+    const rowData = $('#linksTable').DataTable().row(this).data();
     if (!isOwner || !rowData) return;
-    selectedLinkId = rowData.linkID; // assumes your link object has `linkID`
-    $("#linkDetailModalLabel").text(rowData.name);
 
-    // fetch detail from server
+    selectedLink = rowData; // Store the whole link object for later use
+    $('#linkDetailModalLabel').text(selectedLink.name);
+
     try {
-      const resp = await fetch(API + `Links/details?linkId=${selectedLinkId}`);
-      const j = await resp.json();
-      const info = typeof j.body === "string" ? JSON.parse(j.body) : j.body;
+        const resp = await fetch(API + `Links/details?linkId=${selectedLink.linkID}`);
+        if (!resp.ok) throw new Error('Failed to fetch link details');
+        const j = await resp.json();
+        const info = typeof j.body === 'string' ? JSON.parse(j.body) : j.body;
 
-      // populate stats
-      const statsUl = $("#countryStats").empty();
-      Object.entries(info.clicksByCountry || {}).forEach(([country, count]) => {
-        statsUl.append(`<li>${country}: ${count}</li>`);
-      });
+        // Populate click stats
+        const statsUl = $('#countryStats').empty();
+        const countries = info.clicksByCountry || {};
+        if (Object.keys(countries).length > 0) {
+            Object.entries(countries).forEach(([country, count]) => {
+                statsUl.append(`<li>${country}: ${count}</li>`);
+            });
+        } else {
+            statsUl.append(`<li class="text-muted">No clicks recorded yet.</li>`);
+        }
+        
+        // Set visibility switch
+        $('#linkVisibilitySwitch').prop('checked', info.isPublic);
+        
+        // Manage password section visibility
+        if (info.isPasswordProtected) {
+            $('#passwordSection').show();
+            // Store the real password securely on an element for the reveal feature
+            $('#revealedPasswordText').data('password', info.password || '');
+        } else {
+            $('#passwordSection').hide();
+        }
+        
+        // Reset all modal fields and states on open
+        $('#currentPassword, #newPassword').val('');
+        $('#passwordUpdateError').text('');
+        $('#revealedPassword').hide();
 
-      // password & toggle button
-      $("#linkPassword")
-        .val(info.password || "")
-        .prop("disabled", true);
-      $("#togglePasswordBtn").text(info.password ? "Edit" : "Add");
+        linkModal.show();
 
-      // visibility switch
-      $("#linkVisibilitySwitch").prop("checked", info.isPublic);
-
-      $("#linkPasswordError").text("");
-      linkModal.show();
     } catch (e) {
-      console.error(e);
-      createPopupError("Could not load link details");
+        console.error("Error loading link details:", e);
+        createPopupError("Could not load link details.");
     }
-  });
+});
 
-  // Toggle password field edit/save
-  $("#togglePasswordBtn").click(() => {
-    const pwd = $("#linkPassword");
-    const editing = pwd.prop("disabled");
-    pwd.prop("disabled", !editing);
-    $(this).text(editing ? "Save" : "Edit");
-  });
-
-  // Save changes (password & visibility)
-  $("#saveLinkChangesBtn").click(async () => {
-    const newPassword = $("#linkPassword").val().trim() || null;
-    const isPublic = $("#linkVisibilitySwitch").prop("checked");
-    const btn = $("#saveLinkChangesBtn").get(0);
+// --- Save Visibility Changes ---
+$('#saveLinkChangesBtn').click(async function () {
+    const isPublic = $('#linkVisibilitySwitch').prop('checked');
+    const btn = this;
     addSpinnerToButton(btn);
 
     try {
-      await fetch(API + "Links/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          linkId: selectedLinkId,
-          password: newPassword,
-          isPublic: isPublic,
-        }),
-      });
-      createPopup("Saved changes");
-      linkModal.hide();
-      $("#linksTable").DataTable().ajax.reload(null, false);
+        // This should call your 'update_link_privacy' or 'toggle_link_privacy' Lambda
+        const resp = await fetch(API + 'Links/privacy', { // Assuming endpoint name
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                linkId: selectedLink.linkID,
+                isPrivate: !isPublic // isPublic is the opposite of IsPrivate
+            }),
+        });
+        if (!resp.ok) throw new Error('Failed to update visibility.');
+        
+        createPopup('Visibility updated!');
+        linkModal.hide();
+        // You may need to refresh your DataTable to see the change
+        $('#linksTable').DataTable().ajax.reload(null, false);
     } catch (e) {
-      console.error(e);
-      createPopupError("Save failed");
+        console.error("Save visibility failed:", e);
+        createPopupError('Could not save visibility.');
     } finally {
-      restoreButton(btn);
+        restoreButton(btn);
     }
-  });
+});
 
-  // Delete link
-  $("#deleteLinkBtn").click(async () => {
-    if (!confirm("Delete this link permanently?")) return;
-    const btn = $("#deleteLinkBtn").get(0);
+// --- Change Password ---
+$('#changePasswordBtn').click(async function() {
+    const currentPassword = $('#currentPassword').val();
+    const newPassword = $('#newPassword').val();
+    const btn = this;
+
+    // Basic validation
+    if (!currentPassword || !newPassword) {
+        $('#passwordUpdateError').text('Both fields are required.');
+        return;
+    }
+    if (newPassword.length < 4) {
+        $('#passwordUpdateError').text('New password must be at least 4 characters.');
+        return;
+    }
+    
+    $('#passwordUpdateError').text('');
     addSpinnerToButton(btn);
 
     try {
-      await fetch(API + `Links/${selectedLinkId}`, { method: "DELETE" });
-      createPopup("Link deleted");
-      linkModal.hide();
-      $("#linksTable").DataTable().row(".selected").remove().draw();
-    } catch (e) {
-      console.error(e);
-      createPopupError("Delete failed");
+        const resp = await fetch(API + 'Links/password', { // Assuming endpoint from previous step
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                linkId: selectedLink.linkID,
+                userId: currentUserID,
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+            }),
+        });
+
+        const result = await resp.json();
+        
+        if (!resp.ok) {
+            // Use the error message from the Lambda function
+            throw new Error(result.message || 'An unknown error occurred.');
+        }
+
+        createPopup('Password changed successfully!');
+        $('#currentPassword, #newPassword').val(''); // Clear fields
+        // Update the stored password for the reveal feature
+        $('#revealedPasswordText').data('password', newPassword);
+
+    } catch(e) {
+        console.error("Password change failed:", e);
+        $('#passwordUpdateError').text(e.message); // Show specific error
     } finally {
-      restoreButton(btn);
+        restoreButton(btn);
     }
-  });
+});
 
-  // Generate & render 10 mock achievements
-  const mockAchievements = Array.from({ length: 10 }, (_, i) => {
-    const user = MOCK_USERS[i % MOCK_USERS.length];
-    const daysAgo = Math.floor(Math.random() * 60);
-    const earned = new Date(Date.now() - daysAgo * 86400000)
-      .toISOString()
-      .split("T")[0];
-    return {
-      username: user.username,
-      picture: user.picture,
-      linkName: `Sample Link ${i + 1}`,
-      numberOfClicks: Math.floor(Math.random() * 500) + 1,
-      dateEarned: earned,
-    };
-  });
-  renderAchievements(mockAchievements);
 
-  // Helper: render achievements cards
-  function renderAchievements(list) {
-    const container = $("#achievementsContainer").empty();
-    list.forEach((a) => {
-      const card = $(`
-        <div class="achievement-card col-auto">
-          <img src="${a.picture}" alt="${a.username}" />
-          <div class="link-name">${a.linkName}</div>
-          <div class="clicks">${a.numberOfClicks} clicks</div>
-          <div class="date">${new Date(a.dateEarned).toLocaleDateString()}</div>
-        </div>
-      `);
-      container.append(card);
-    });
-  }
+// --- Forgot/Reveal Password ---
+$('#forgotPasswordBtn').click(function() {
+    const storedPassword = $('#revealedPasswordText').data('password');
+    if (storedPassword) {
+        $('#revealedPasswordText').text(storedPassword);
+        $('#revealedPassword').slideDown();
+    }
+});
+
+// --- Delete Link ---
+$('#deleteLinkBtn').click(async function () {
+    const isConfirmed = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => result.isConfirmed);
+
+    if (!isConfirmed) return;
+
+    const btn = this;
+    addSpinnerToButton(btn);
+
+    try {
+        const resp = await fetch(API + `Links/delete?linkID=${selectedLink.linkID}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Delete request failed.');
+
+        createPopup('Link deleted');
+        linkModal.hide();
+        // Remove the row from the DataTable without a full reload
+        $('#linksTable').DataTable().row('.selected').remove().draw(false);
+    } catch (e) {
+        console.error('Delete failed:', e);
+        createPopupError('Could not delete link.');
+    } finally {
+        restoreButton(btn);
+    }
+});
 });
