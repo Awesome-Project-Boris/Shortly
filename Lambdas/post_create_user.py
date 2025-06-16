@@ -6,7 +6,7 @@ from datetime import datetime
 dynamodb = boto3.resource('dynamodb')
 
 # Specify your DynamoDB table name
-USER_TABLE = "User" # !!replace with your table name!!
+USER_TABLE = "Users" # !!replace with your table name!!
 
 # Reference to the DynamoDB table
 user_table = dynamodb.Table(USER_TABLE)
@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     
     # Prepare the user data to insert into DynamoDB
     user_data = {
-        'userID': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
+        'UserId': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
         'Nickname': user_attributes.get('nickname'),
         'Email': email,
         'FullName': user_attributes.get('name', 'Unknown'),
