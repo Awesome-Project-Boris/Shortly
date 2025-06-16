@@ -10,7 +10,6 @@ $(document).ready(function () {
   // Build navbar from global.js
   // buildNavBar();
 
-  const userID = localStorage.getItem("userID");
   // if (!userID) return (location.href = "index.html");
 
   const COUNTRIES = [
@@ -216,134 +215,151 @@ $(document).ready(function () {
     $country.append(`<option value="${c}">${c}</option>`);
   });
 
-  // Fetch existing profile
-  async function loadProfile() {
-    try {
-      const resp = await fetch(API + `Users/byid?userID=${userID}`);
-      const j = await resp.json();
-      const data = typeof j.body === "string" ? JSON.parse(j.body) : j.body;
-
-      $("#name").val(data.name || "");
-      $country.val(data.country || "");
-
-    } catch (e) {
-      console.error("Failed to load profile:", e);
-    }
-  }
-
-  loadProfile();
-
-  // In Shortly/script/edit_profile.js
-
-$(".edit-profile-form").on("submit", async function (e) {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const form = this;
-  // First, perform standard browser validation
-  if (!form.checkValidity()) {
-    $(form).addClass("was-validated");
-    return;
-  }
-
-  const name = $("#name").val().trim();
-  const country = $("#country").val();
-  const photoEl = $("#photo")[0];
-  const photoFile = photoEl.files[0] || null;
-
-  const btn = $(form).find('button[type="submit"]').get(0);
-  addSpinnerToButton(btn);
-
-  let uploadedPhotoInfo = null; // Will store { url, key } after a successful upload
-
-  try {
-    // STEP 1: UPLOAD PHOTO (only if a new one is selected)
-    if (photoFile) {
-      console.log("New photo selected. Requesting upload URL...");
-      // 1a: Get a pre-signed URL from your new API endpoint
-      const presignedResponse = await fetch(API + "uploads/image/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Send the file type to the backend so it can be set correctly in S3
-        body: JSON.stringify({ contentType: photoFile.type })
-      });
-
-      if (!presignedResponse.ok) {
-        throw new Error("Could not get an upload URL from the server.");
-      }
-      
-      // The backend returns the URL to upload to, the final URL, and the file key
-      const { uploadUrl, key, finalUrl } = await presignedResponse.json();
-      
-      // 1b: Upload the file directly to S3 using the secure pre-signed URL
-      console.log("Uploading photo directly to S3...");
-      const s3UploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        body: photoFile,
-        headers: { "Content-Type": photoFile.type }
-      });
-
-      if (!s3UploadResponse.ok) {
-        throw new Error("Failed to upload photo file to S3.");
-      }
-      
-      console.log("Photo uploaded successfully.");
-      // Store the new photo's URL and key for the next step
-      uploadedPhotoInfo = { url: finalUrl, key: key };
+  const userID = localStorage.getItem("userID");
+    if (!userID) {
+        // Redirect to login or index if no user is logged in.
+        window.location.href = "index.html";
+        return;
     }
 
-    // STEP 2: UPDATE USER PROFILE IN DYNAMODB
-    console.log("Updating user profile...");
-    const userUpdatePayload = {
-      userID: userID,
-      name: name,
-      country: country,
-    };
+    // This variable will hold the S3 key of the user's current profile picture.
+    let currentPictureKey = null;
+    const $form = $(".edit-profile-form");
 
-    // Only add the 'picture' field to the payload if a new photo was uploaded
-    if (uploadedPhotoInfo) {
-      userUpdatePayload.picture = uploadedPhotoInfo.url;
+    // --- Helper function to extract S3 key from a URL ---
+    function getS3KeyFromUrl(url) {
+        if (!url) return null;
+        try {
+            // S3 URLs are typically in the format: https://bucket-name.s3.amazonaws.com/key
+            // This splits the URL and takes everything after the hostname.
+            const urlObject = new URL(url);
+            // The key is the pathname, but we need to remove the leading '/'
+            return urlObject.pathname.substring(1);
+        } catch (e) {
+            console.error("Could not parse S3 URL:", e);
+            // Fallback for non-standard URLs if needed.
+            // This is a simple fallback and might need adjustment based on your exact URL format.
+            if (url.includes('.com/')) {
+                return url.split('.com/')[1];
+            }
+            return null;
+        }
     }
 
-    const userUpdateResponse = await fetch(API + "Users/update", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userUpdatePayload),
+    // --- Load existing profile data ---
+    async function loadProfile() {
+        try {
+            // Using the correct table name 'Users' as per your schema
+            const resp = await fetch(API + `Users/byid?userID=${userID}`);
+            const j = await resp.json();
+            const data = typeof j.body === "string" ? JSON.parse(j.body) : j.body;
+
+            // Populate form fields
+            $("#name").val(data.FullName || "");
+            $("#country").val(data.Country || "");
+
+            // Extract and store the key of the current profile picture
+            currentPictureKey = getS3KeyFromUrl(data.Picture);
+            console.log("Current picture key:", currentPictureKey);
+
+        } catch (e) {
+            console.error("Failed to load profile:", e);
+            createPopupError("Could not load your profile data.");
+        }
+    }
+
+    // --- Form Submission Logic ---
+    $form.on("submit", async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!this.checkValidity()) {
+            $(this).addClass("was-validated");
+            return;
+        }
+
+        const name = $("#name").val().trim();
+        const country = $("#country").val();
+        const photoFile = $("#photo")[0].files[0] || null;
+
+        const btn = $(this).find('button[type="submit"]').get(0);
+        addSpinnerToButton(btn);
+
+        let newPhotoInfo = null;
+        let updatePayload = {
+            FullName: name,
+            Country: country,
+        };
+
+        try {
+            // STEP 1: UPLOAD NEW PHOTO (if selected)
+            if (photoFile) {
+                const presignedResponse = await fetch(API + "uploads/image/request", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contentType: photoFile.type }),
+                });
+                if (!presignedResponse.ok) throw new Error("Could not get upload URL.");
+                
+                const { uploadUrl, key, finalUrl } = await presignedResponse.json();
+                
+                const s3UploadResponse = await fetch(uploadUrl, {
+                    method: "PUT",
+                    body: photoFile,
+                    headers: { "Content-Type": photoFile.type },
+                });
+                if (!s3UploadResponse.ok) throw new Error("Photo upload to S3 failed.");
+
+                // If upload is successful, add the new picture to the payload
+                updatePayload.Picture = finalUrl;
+                // And store the new key for a potential rollback
+                newPhotoInfo = { key: key }; 
+            }
+
+            // STEP 2: UPDATE USER PROFILE
+            const profileUpdateResponse = await fetch(API + "Users/update", { // This calls your new update_user_profile.py
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: userID,
+                    updateData: updatePayload,
+                    // Send the key of the OLD picture for deletion on the server
+                    oldPictureKey: photoFile ? currentPictureKey : null,
+                }),
+            });
+
+            if (!profileUpdateResponse.ok) {
+                throw new Error("Failed to update profile information.");
+            }
+
+            createPopup("Profile saved successfully!");
+            setTimeout(() => goToProfile(), 1500);
+
+        } catch (err) {
+            console.error("Profile update process failed:", err);
+
+            // ROLLBACK: If a new photo was uploaded but the DB update failed, delete the new photo.
+            if (newPhotoInfo) {
+                console.log("Rolling back: deleting newly uploaded image.");
+                try {
+                    await fetch(API + "uploads/image", {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: newPhotoInfo.key }),
+                    });
+                } catch (deleteErr) {
+                    console.error("CRITICAL: Rollback failed. Orphaned file may exist in S3:", newPhotoInfo.key);
+                }
+            }
+            createPopupError("Could not save profile. Please try again.");
+        } finally {
+            restoreButton(btn);
+        }
     });
 
-    if (!userUpdateResponse.ok) {
-      // If this step fails, the 'catch' block below will trigger the rollback
-      throw new Error("Failed to update user profile in the database.");
-    }
-
-    createPopup("Profile saved successfully!");
-    goToProfile();
-
-  } catch (err) {
-    console.error("An error occurred during the profile update process:", err);
-
-    // STEP 3: ROLLBACK! Delete the image from S3 if it was uploaded but the profile update failed.
-    if (uploadedPhotoInfo) {
-      console.log("Profile update failed. Starting rollback to delete orphaned image...");
-      try {
-        await fetch(API + "uploads/image", {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: uploadedPhotoInfo.key }) // Send the key of the file to delete
-        });
-        console.log("Orphaned image successfully deleted from S3.");
-      } catch (deleteErr) {
-        // This is a critical error, as you now have an orphaned file.
-        // You may want to log this to a monitoring service.
-        console.error("CRITICAL: Failed to delete orphaned image during rollback.", deleteErr);
-      }
-    }
-
-    createPopupError("Could not save profile. Please try again.");
-
-  } finally {
-    // This runs whether the process succeeded or failed
-    restoreButton(btn);
-  }
+    // Initial load of the profile
+    loadProfile();
 });
-});
+
+
+
