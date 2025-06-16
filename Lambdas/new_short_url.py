@@ -61,14 +61,14 @@ def lambda_handler(event, context):
     # Generate a unique short code, retrying on collisions
     code = generate_code()
     while True:
-        resp = table.get_item(Key={'linkID': code})
+        resp = table.get_item(Key={'linkId': code})
         if 'Item' not in resp:
             break
         code = generate_code()
 
     # Prepare item to store
     item = {
-        'linkID': code,
+        'linkId': code,
         'string': long_url,
         'name': name,
         'description': description,
