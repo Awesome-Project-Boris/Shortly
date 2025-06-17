@@ -17,7 +17,7 @@ def lambda_handler(event, context):
         user_resp = user_table.get_item(Key={"UserId": user_id})
         user = user_resp.get("Item")
 
-        if not user or user.get("isActive") != "true":
+        if not user or user.get("IsActive") != "true":
             return _res(403, "User not found or inactive.")
 
         # Parse their link IDs
