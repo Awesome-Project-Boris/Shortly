@@ -17,7 +17,7 @@ def lambda_handler(event, context):
         if not notification_id:
             return _res(400, "Missing NotifId.")
 
-        # Get the notification
+        # Get the original friend request
         notif_resp = notif_table.get_item(Key={"NotifId": notification_id})
         notif = notif_resp.get("Item")
         if not notif or notif.get("Status") != "pending":
@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         from_user = notif["FromUserId"]
         to_user = notif["ToUserId"]
 
-        # Always mark notification as read
+        # Mark original as read and update status
         notif_table.update_item(
             Key={"NotifId": notification_id},
             UpdateExpression="SET #s = :s, IsRead = :r",
@@ -37,17 +37,30 @@ def lambda_handler(event, context):
             }
         )
 
-
-        if not accept:
-            return _res(200, "Friend request rejected.")
-
         # Get both users
         from_data = user_table.get_item(Key={"UserId": from_user}).get("Item")
         to_data = user_table.get_item(Key={"UserId": to_user}).get("Item")
         if not from_data or not to_data:
             return _res(404, "One or both users not found.")
 
-        # Extract and update friends list (stored as JSON string or "" on init)
+        # Send notification to original sender
+        notif_table.put_item(
+            Item={
+                "NotifId": str(uuid4()),
+                "FromUserId": to_user,         # The one responding
+                "ToUserId": from_user,         # The one who sent original request
+                "Status": "accepted" if accept else "rejected",
+                "IsRead": 0,
+                "Text": f"{to_data.get('Username', 'Someone')} {'accepted' if accept else 'rejected'} your friend request.",
+                "LinkId": "",
+                "Timestamp": datetime.utcnow().isoformat()
+            }
+        )
+
+        if not accept:
+            return _res(200, "Friend request rejected.")
+
+        # Add each other as friends
         def parse_friends(user):
             raw = user.get("Friends", "")
             return set(json.loads(raw)) if raw else set()
@@ -58,7 +71,6 @@ def lambda_handler(event, context):
         from_friends.add(to_user)
         to_friends.add(from_user)
 
-        # Update both users
         user_table.update_item(
             Key={"UserId": from_user},
             UpdateExpression="SET Friends = :f",
@@ -68,33 +80,6 @@ def lambda_handler(event, context):
             Key={"UserId": to_user},
             UpdateExpression="SET Friends = :f",
             ExpressionAttributeValues={":f": json.dumps(list(to_friends))}
-        )
-        
-        # Example Request Body for Testing
-        # {
-        #   "NotificationId": "b5a1c0d1-30fd-4022-a3cf-0a2c456789ab",  
-        #   "accept": true
-        # }
-        
-        
-        
-        
-        # Send acceptance notification back to the sender
-        notification_id = str(uuid4())
-        timestamp = datetime.utcnow().isoformat()
-        receiver_name = to_data.get("FullName", "Someone")
-
-        notif_table.put_item(
-            Item={
-                "NotifId": notification_id,
-                "FromUserId": "",  # system message
-                "ToUserId": from_user,
-                "Status": "",
-                "IsRead": 0,
-                "Text": f"{receiver_name} accepted your friend request.",
-                "LinkId": "",
-                "Timestamp": timestamp
-            }
         )
 
         return _res(200, "Friend request accepted.")
@@ -109,3 +94,13 @@ def _res(status, message):
         "headers": {"Content-Type": "application/json"},
         "body": json.dumps({"message": message})
     }
+
+
+
+
+
+ # Example Request Body for Testing
+        # {
+        #   "NotificationId": "b5a1c0d1-30fd-4022-a3cf-0a2c456789ab",  
+        #   "accept": True
+        # }

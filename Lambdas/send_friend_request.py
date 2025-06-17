@@ -48,10 +48,10 @@ def lambda_handler(event, context):
 
         # No conflict, create friend request notification
         notif_id = str(uuid.uuid4())
-        text = f"{from_data.get('FullName', 'Someone')} wants to be friends."
+        text = f"{from_data.get('Username', 'Someone')} wants to be friends."
 
         item = {
-            "NotificationId": notif_id,
+            "NotifId": notif_id,
             "FromUserId": from_user,
             "ToUserId": to_user,
             "Status": "pending",
@@ -67,8 +67,37 @@ def lambda_handler(event, context):
         #     "ToUserId": "user456"
         # }
         
+        # How a friend request looks in the Notifications table:
+            # {
+            #     "Timestamp": {
+            #         "S": "2025-06-17T14:10:19.907339"
+            #     },
+            #     "IsRead": {
+            #         "N": "0"
+            #     },
+            #     "LinkId": {
+            #         "S": ""
+            #     },
+            #     "ToUserId": {
+            #         "S": "Robert2"
+            #     },
+            #     "NotificationId": {
+            #         "S": "1f47214c-c32c-477b-a84f-103d25890aef"
+            #     },
+            #     "Status": {
+            #         "S": "pending"
+            #     },
+            #     "Text": {
+            #         "S": "Alicia wants to be friends."
+            #     },
+            #     "FromUserId": {
+            #         "S": "Alicia1"
+            #     }
+            # }
+        
+        
         notification_table.put_item(Item=item)
-        return _res(200, "Friend request sent.")
+        return _res(200, {"message": "Friend request sent.", "NotificationId": notif_id})
 
     except Exception as e:
         return _res(500, str(e))
@@ -78,5 +107,5 @@ def _res(status, message):
     return {
         "statusCode": status,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps({"message": message})
+        "body": json.dumps(message if isinstance(message, dict) else {"message": message})
     }
