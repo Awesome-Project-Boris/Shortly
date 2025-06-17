@@ -14,44 +14,41 @@ TABLE_NAME = os.environ.get('LINKS_TABLE', 'Links')
 def _decimal_default(obj):
     """Helper to convert DynamoDB Decimal objects to JSON-serializable types."""
     if isinstance(obj, decimal.Decimal):
-        # If no fractional part, output as int
+        # Convert whole numbers to int
         if obj % 1 == 0:
             return int(obj)
-        # Otherwise output as float
+        # Preserve decimals as float
         return float(obj)
+    # Let other types fail loudly
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
 def lambda_handler(event, context):
     """
-    Lambda entry point: returns all public links (IsPrivate == False).
-    Scans the table with a filter and returns matching items.
+    Lambda entry point: returns all public and active links.
+
+    Public links: IsPrivate == False
+    Active links: IsActive == True
+    Performs a table scan with both filters applied.
     """
     table = dynamodb.Table(TABLE_NAME)
     try:
-        # Scan for items where IsPrivate attribute is False
+        # Scan for links that are both public and active
         response = table.scan(
-            FilterExpression=Attr('IsPrivate').eq(False)
+            FilterExpression=(
+                Attr('IsPrivate').eq(False) & Attr('IsActive').eq(True)
+            )
         )
         links = response.get('Items', [])
     except Exception as e:
         # Return 500 if the scan operation fails
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': f'Error fetching public links: {e}'})
+            'body': json.dumps({'error': f'Error fetching links: {e}'})
         }
 
-    # Return the list of public links, converting any Decimal types
+    # Return filtered links, converting any Decimal types
     return {
         'statusCode': 200,
         'body': json.dumps({'links': links}, default=_decimal_default)
     }
-
-# Create mock event - empty since lambda_handler doesn't use event params
-mock_event = {}
-
-# Call lambda handler with mock event
-result = lambda_handler(mock_event, None)
-
-# Print result
-print(json.dumps(result, indent=2))
