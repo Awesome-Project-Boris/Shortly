@@ -23,8 +23,11 @@ def lambda_handler(event, context):
     user_data = {
         'UserId': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         'Username': user_attributes.get('username'),
 =======
+=======
+>>>>>>> Stashed changes
         'Nickname': user_attributes.get('nickname', 'unknown'),
         'Email': email,
 >>>>>>> Stashed changes
