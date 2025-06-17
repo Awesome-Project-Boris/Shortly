@@ -117,11 +117,16 @@ $('#linksTable tbody').on('click', 'tr', async function () {
     const rowData = $('#linksTable').DataTable().row(this).data();
     if (!isOwner || !rowData) return;
 
-    selectedLink = rowData; // Store the whole link object for later use
-    $('#linkDetailModalLabel').text(selectedLink.name);
+    selectedLink = rowData;
+    $('#linkDetailModalLabel').text(`Statistics for "${selectedLink.Name}"`);
+
+    // Reset view before showing
+    $('#totalClicks').text('...');
+    $('#countryStatsContainer').html('<div class="spinner-border spinner-border-sm text-primary" role="status"></div>');
+    linkModal.show();
 
     try {
-        const resp = await fetch(API + 'Links/details', {
+        const resp = await fetch(API + 'links/details', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ linkId: selectedLink.LinkId })
@@ -129,39 +134,27 @@ $('#linksTable tbody').on('click', 'tr', async function () {
         if (!resp.ok) throw new Error('Failed to fetch link details');
         const info = await resp.json();
 
-        // Populate click stats
-        const statsUl = $('#countryStats').empty();
-        const countries = info.clicksByCountry || {};
-        if (Object.keys(countries).length > 0) {
-            Object.entries(countries).forEach(([country, count]) => {
-                statsUl.append(`<li>${country}: ${count}</li>`);
-            });
-        } else {
-            statsUl.append(`<li class="text-muted">No clicks recorded yet.</li>`);
-        }
+        // --- Populate the Modal with New Data ---
+        $('#totalClicks').text(info.TotalClicks);
+        renderCountryStats(info.clicksByCountry);
         
-        // Set visibility switch
-        $('#linkVisibilitySwitch').prop('checked', info.isPublic);
+        $('#linkVisibilitySwitch').prop('checked', !info.IsPrivate);
         
-        // Manage password section visibility
-        if (info.isPasswordProtected) {
+        if (info.IsPasswordProtected) {
             $('#passwordSection').show();
-            // Store the real password securely on an element for the reveal feature
-            $('#revealedPasswordText').data('password', info.password || '');
+            $('#revealedPasswordText').data('password', info.Password || '');
         } else {
             $('#passwordSection').hide();
         }
         
-        // Reset all modal fields and states on open
         $('#currentPassword, #newPassword').val('');
         $('#passwordUpdateError').text('');
         $('#revealedPassword').hide();
 
-        linkModal.show();
-
     } catch (e) {
         console.error("Error loading link details:", e);
         createPopupError("Could not load link details.");
+        $('#countryStatsContainer').html('<p class="text-danger small">Could not load stats.</p>');
     }
 });
 
@@ -293,3 +286,32 @@ $('#deleteLinkBtn').click(async function () {
     }
 });
 });
+
+function renderCountryStats(statsData) {
+    const container = $('#countryStatsContainer');
+    container.empty();
+
+    if (!statsData || Object.keys(statsData).length === 0) {
+        container.html('<p class="text-muted small m-0">No country-specific data available.</p>');
+        return;
+    }
+
+    // Find the maximum click count to normalize the bar widths
+    const maxClicks = Math.max(...Object.values(statsData));
+
+    // Sort countries by click count, descending
+    const sortedCountries = Object.entries(statsData).sort((a, b) => b[1] - a[1]);
+
+    sortedCountries.forEach(([country, clicks]) => {
+        // Calculate the width of the bar as a percentage of the max
+        const barWidth = (clicks / maxClicks) * 100;
+        
+        const barHtml = `
+            <div class="stat-bar" style="width: ${barWidth}%;">
+                <span>${country}</span>
+                <span>${clicks}</span>
+            </div>
+        `;
+        container.append(barHtml);
+    });
+}

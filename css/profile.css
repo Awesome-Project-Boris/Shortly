@@ -143,3 +143,57 @@
   color: #666;
   margin-bottom: 0.25rem;
 }
+
+/* In Shortly/css/profile.css */
+
+/* --- Link Statistics Modal Styling --- */
+
+#countryStatsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Space between bars */
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+.stat-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #e9f5ff; /* A light, on-brand blue */
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    color: #0056b3; /* A darker, readable blue */
+    font-weight: 500;
+    
+    /* Animation for the bars appearing */
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: growBar 0.5s forwards;
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Delay animation for each subsequent bar to create a staggered effect */
+.stat-bar:nth-child(2) { animation-delay: 0.05s; }
+.stat-bar:nth-child(3) { animation-delay: 0.1s; }
+.stat-bar:nth-child(4) { animation-delay: 0.15s; }
+.stat-bar:nth-child(5) { animation-delay: 0.2s; }
+/* Add more if you expect more than 5 countries regularly */
+
+@keyframes growBar {
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.stat-bar span:first-child {
+    /* Country name */
+    white-space: nowrap;
+}
+
+.stat-bar span:last-child {
+    /* Click count */
+    font-weight: 700;
+    padding-left: 1rem;
+}
