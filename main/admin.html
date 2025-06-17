@@ -10,16 +10,20 @@
       rel="stylesheet"
       crossorigin="anonymous"
     />
-
     <link
       href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css"
       rel="stylesheet"
     />
-
+    <!-- Add form-switch styling for the checkbox -->
+    <style>
+        .form-switch .form-check-input {
+            cursor: pointer;
+            width: 3.5em;
+            height: 1.75em;
+        }
+    </style>
     <link rel="stylesheet" href="../css/indexStyles.css" />
-
     <link rel="stylesheet" href="../css/global.css" />
-
     <link rel="stylesheet" href="../css/admin.css" />
 
     <script
@@ -28,7 +32,6 @@
       integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
       crossorigin="anonymous"
     ></script>
-
     <script
       defer
       src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"
@@ -37,16 +40,14 @@
       defer
       src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"
     ></script>
-
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
       crossorigin="anonymous"
     ></script>
-
-    <script defer src="../script/global.js"></script>
-
-    <script defer src="../script/admin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../script/global.js"></script>
+    <script src="../script/admin.js"></script>
   </head>
 
   <body>
@@ -56,6 +57,31 @@
     ></header>
 
     <main class="main container py-5">
+      <!-- NEW: Users Table Section -->
+      <div class="section-header">
+        <h2 class="section-title">User Management</h2>
+        <hr class="divider" />
+      </div>
+
+      <div class="table-card mb-5">
+        <table id="usersTable" class="table mb-0">
+          <thead>
+            <tr>
+              <th>User Name</th>
+              <th>Full Name</th>
+              <th>Country</th>
+              <th>Date Joined</th>
+              <th>Total Clicks</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- User data will be populated by admin.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Existing Links Table Section -->
       <div class="section-header">
         <h2 class="section-title">All Links</h2>
         <hr class="divider" />
@@ -74,6 +100,7 @@
             </tr>
           </thead>
           <tbody>
+            <!-- Link data will be populated by admin.js -->
           </tbody>
         </table>
       </div>

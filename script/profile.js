@@ -5,19 +5,18 @@ $(document).ready(async function () {
   const isOwner = profileID === me;
 
   try {
-    const resp = await fetch(API + `Users/byid?userID=${profileID}`);
+    const resp = await fetch(API + 'Users/byid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profileID })
+    });
     const body = await resp.json();
-    const data =
-      typeof body.body === "string" ? JSON.parse(body.body) : body.body;
+    const data = typeof body.body === "string" ? JSON.parse(body.body) : body.body;
 
     $("#userName").text(`User name: ${data.username}`);
     $("#user-name").text(`Full Name: ${data.name}`);
     $("#user-joined").text(
       `Date Joined: ${new Date(data.creationDate).toLocaleDateString()}`
-    );
-    $("#address").text(`Address: ${data.address}`);
-    $("#phone-number").text(
-      `Phone Number: ${formatPhoneNumber(data.phone_number)}`
     );
     $("#user-items-count").text(`Links created: ${data.linkCount ?? 0}`);
     $(".profile-pic").attr("src", data.picture);
@@ -50,7 +49,11 @@ $(document).ready(async function () {
   // Fetch & render links DataTable
   let links = [];
   try {
-    const resp = await fetch(API + `Links/created?userID=${profileID}`);
+    const resp = await fetch(API + 'Links/created', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profileID })
+    });
     const body = await resp.json();
     links = JSON.parse(body.body);
   } catch (e) {
@@ -118,10 +121,13 @@ $('#linksTable tbody').on('click', 'tr', async function () {
     $('#linkDetailModalLabel').text(selectedLink.name);
 
     try {
-        const resp = await fetch(API + `Links/details?linkId=${selectedLink.linkID}`);
+        const resp = await fetch(API + 'Links/details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ linkId: selectedLink.LinkId })
+        });
         if (!resp.ok) throw new Error('Failed to fetch link details');
-        const j = await resp.json();
-        const info = typeof j.body === 'string' ? JSON.parse(j.body) : j.body;
+        const info = await resp.json();
 
         // Populate click stats
         const statsUl = $('#countryStats').empty();
@@ -268,7 +274,11 @@ $('#deleteLinkBtn').click(async function () {
     addSpinnerToButton(btn);
 
     try {
-        const resp = await fetch(API + `Links/delete?linkID=${selectedLink.linkID}`, { method: 'DELETE' });
+        const resp = await fetch(API + 'Links/delete', { 
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ linkId: selectedLink.LinkId })
+        });
         if (!resp.ok) throw new Error('Delete request failed.');
 
         createPopup('Link deleted');

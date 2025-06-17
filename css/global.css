@@ -94,3 +94,25 @@ header.navbar .btn {
   transform: translate(25%, -25%);
 }
 
+.notification-card {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #e9ecef; /* Lighter border */
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.notification-card:hover {
+  background-color: #f8f9fa; /* Subtle hover effect */
+}
+
+.notification-card .notification-text {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Make sure the friend request card is NOT clickable */
+.friend-request-card {
+  cursor: default;
+}

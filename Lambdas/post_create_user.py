@@ -22,7 +22,12 @@ def lambda_handler(event, context):
     # Prepare the user data to insert into DynamoDB
     user_data = {
         'UserId': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
+<<<<<<< Updated upstream
         'Username': user_attributes.get('username'),
+=======
+        'Nickname': user_attributes.get('nickname', 'unknown'),
+        'Email': email,
+>>>>>>> Stashed changes
         'FullName': user_attributes.get('name', 'Unknown'),
         'Country': user_attributes.get('locale','Unknown'),
         'DateJoined': creation_date,  # Add the current creation date in the desired format
