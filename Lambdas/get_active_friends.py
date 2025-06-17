@@ -15,7 +15,7 @@ def lambda_handler(event, context):
         # Get the requesting user
         resp = user_table.get_item(Key={"UserId": user_id})
         user = resp.get("Item")
-        if not user or user.get("isActive") != "true":
+        if not user or user.get("IsActive") != "true":
             return _res(403, "User not found or inactive.")
 
         # Parse friend list
@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         for fid in friend_ids:
             f_resp = user_table.get_item(Key={"UserId": fid})
             f_user = f_resp.get("Item")
-            if f_user and f_user.get("isActive") == "true":
+            if f_user and f_user.get("IsActive") == "true":
                 results.append({
                     "UserId": f_user["UserId"],
                     "FullName": f_user.get("FullName", ""),
