@@ -1,31 +1,47 @@
 import json
 import boto3
+from boto3.dynamodb.conditions import Attr
 
 dynamodb = boto3.resource('dynamodb')
 user_table = dynamodb.Table("Users")
+links_table = dynamodb.Table("Links")  # Assumes "Links" table exists
 
 def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
         user_id = body.get("UserId")
+        active_flag = body.get("IsActive")
 
-        if not user_id:
-            return _res(400, "Missing UserId")
+        if user_id is None or active_flag is None:
+            return _res(400, "Missing UserId or IsActive field")
 
-        # Check if user exists
-        resp = user_table.get_item(Key={"UserId": user_id})
-        user = resp.get("Item")
-        if not user:
-            return _res(404, "User not found")
+        if not isinstance(active_flag, bool):
+            return _res(400, "isActive must be a boolean (true or false)")
 
-        # Update the isActive field
+        # Convert to string as required by the schema
+        is_active_str = "true" if active_flag else "false"
+
+        # Update user's IsActive field
         user_table.update_item(
             Key={"UserId": user_id},
-            UpdateExpression="SET isActive = :a",
-            ExpressionAttributeValues={":a": "false"}
+            UpdateExpression="SET IsActive = :a",
+            ExpressionAttributeValues={":a": is_active_str}
         )
 
-        return _res(200, f"User {user_id} has been banned.")
+        # Update all links owned by this user
+        links = links_table.scan(FilterExpression=Attr("UserId").eq(user_id)).get("Items", [])
+
+        for link in links:
+            link_id = link.get("LinkId")
+            if link_id:
+                links_table.update_item(
+                    Key={"LinkId": link_id},
+                    UpdateExpression="SET IsActive = :a",
+                    ExpressionAttributeValues={":a": is_active_str}
+                )
+
+        state = "activated" if active_flag else "banned"
+        return _res(200, f"User {user_id} has been {state} and their links {state}.")
 
     except Exception as e:
         return _res(500, str(e))
