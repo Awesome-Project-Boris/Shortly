@@ -18,17 +18,18 @@ countries = ['US', 'IL', 'FR', 'DE', 'JP']
 # usernames = ['ali2', 'bo', 'car', 'daph', 'lan']
 
 
-names = ['Alejandro', 'Brandon', 'Chris', 'Doron', 'Ezra']
-usernames = ['aj', 'bran', 'chriz', 'dor', 'ez']
+# names = ['Alejandro', 'Brandon', 'Chris', 'Doron', 'Ezra']
+# usernames = ['aj', 'bran', 'chriz', 'dor', 'ez']
 
-
+names = ['a', 'b', 'c', 'd', 'e']
+usernames = ['aa', 'bb', 'cc', 'dd', 'ee']
 
 for i in range(5):
-    uid = str(uuid4())
+    #uid = str(uuid4())
     
     
     # below is uid for making it easier to test, delete later
-    #uid= names[i] + str(i+1)  # !! Delete later
+    uid= names[i] + str(i+1)  # !! Delete later
     name = names[i]
     uname = usernames[i]  # ← use a different name
     country = choice(countries)

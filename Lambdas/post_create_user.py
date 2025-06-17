@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         'FullName': user_attributes.get('name', 'Unknown'),
         'Country': user_attributes.get('locale','Unknown'),
         'DateJoined': creation_date,  # Add the current creation date in the desired format
-        'IsActive': 'true',
+        'IsActive': True,
         'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
         'Friends': "",
         'Email': email,

@@ -16,10 +16,10 @@ def lambda_handler(event, context):
             return _res(400, "Missing UserId or IsActive field")
 
         if not isinstance(active_flag, bool):
-            return _res(400, "isActive must be a boolean (true or false)")
+            return _res(400, "IsActive must be a boolean (true or false)")
 
         # Convert to string as required by the schema
-        is_active_str = "true" if active_flag else "false"
+        is_active_str = True if active_flag else False
 
         # Update user's IsActive field
         user_table.update_item(
