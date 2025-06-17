@@ -11,14 +11,14 @@ user_table = dynamodb.Table("Users")
 def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
-        notification_id = body.get("NotificationId")
+        notification_id = body.get("NotifId")
         accept = bool(body.get("accept", False))
 
         if not notification_id:
-            return _res(400, "Missing NotificationId.")
+            return _res(400, "Missing NotifId.")
 
         # Get the notification
-        notif_resp = notif_table.get_item(Key={"NotificationId": notification_id})
+        notif_resp = notif_table.get_item(Key={"NotifId": notification_id})
         notif = notif_resp.get("Item")
         if not notif or notif.get("Status") != "pending":
             return _res(404, "Pending friend request not found.")
@@ -28,7 +28,7 @@ def lambda_handler(event, context):
 
         # Always mark notification as read
         notif_table.update_item(
-            Key={"NotificationId": notification_id},
+            Key={"NotifId": notification_id},
             UpdateExpression="SET #s = :s, IsRead = :r",
             ExpressionAttributeNames={"#s": "Status"},
             ExpressionAttributeValues={
@@ -86,7 +86,7 @@ def lambda_handler(event, context):
 
         notif_table.put_item(
             Item={
-                "NotificationId": notification_id,
+                "NotifId": notification_id,
                 "FromUserId": "",  # system message
                 "ToUserId": from_user,
                 "Status": "",

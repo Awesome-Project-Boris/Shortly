@@ -5,34 +5,34 @@ from datetime import datetime
 
 countries = ['US', 'IL', 'FR', 'DE', 'JP']
 # names = ['Alice', 'Bob', 'Charlie', 'Dana', 'Eli']
-# nicknames = ['ali', 'bobby', 'char', 'dee', 'elz']
+# usernames = ['ali', 'bobby', 'char', 'dee', 'elz']
 
-names = ['Alicia', 'Robert', 'Charles', 'Danielle', 'Elijah']
-nicknames = ['al', 'rob', 'chaz', 'dani', 'eli']
+# names = ['Alicia', 'Robert', 'Charles', 'Danielle', 'Elijah']
+# usernames = ['al', 'rob', 'chaz', 'dani', 'eli']
 
 
 # names = ['Allie', 'Bobby Jr.', 'Chuck', 'Dani', 'Ely']
-# nicknames = ['ally', 'bobbyj', 'chuck', 'dede', 'elyz']
+# usernames = ['ally', 'bobbyj', 'chuck', 'dede', 'elyz']
 
 # names = ['Alina', 'Boaz', 'Carl', 'Daphne', 'Elan']
-# nicknames = ['ali2', 'bo', 'car', 'daph', 'lan']
+# usernames = ['ali2', 'bo', 'car', 'daph', 'lan']
 
 
-# names = ['Alejandro', 'Brandon', 'Chris', 'Doron', 'Ezra']
-# nicknames = ['aj', 'bran', 'chriz', 'dor', 'ez']
+names = ['Alejandro', 'Brandon', 'Chris', 'Doron', 'Ezra']
+usernames = ['aj', 'bran', 'chriz', 'dor', 'ez']
 
 
 
 for i in range(5):
-    #uid = str(uuid4())
+    uid = str(uuid4())
     
     
     # below is uid for making it easier to test, delete later
-    uid= names[i] + str(i+1)  # !! Delete later
+    #uid= names[i] + str(i+1)  # !! Delete later
     name = names[i]
-    nickname = nicknames[i]
+    uname = usernames[i]  # ← use a different name
     country = choice(countries)
-    email = f"{nickname}@testmail.com"
+    email = f"{uname}@testmail.com"
     picture = f"https://i.pravatar.cc/150?img={i+1}"
 
     event = {
@@ -41,7 +41,7 @@ for i in range(5):
             "userAttributes": {
                 "sub": uid,
                 "name": name,
-                "nickname": nickname,
+                "username": uname,
                 "locale": country,
                 "picture": picture
             }

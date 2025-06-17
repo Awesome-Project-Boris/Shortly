@@ -22,17 +22,18 @@ def lambda_handler(event, context):
     # Prepare the user data to insert into DynamoDB
     user_data = {
         'UserId': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
-        'Nickname': user_attributes.get('nickname'),
-        'Email': email,
+        'Username': user_attributes.get('username'),
         'FullName': user_attributes.get('name', 'Unknown'),
         'Country': user_attributes.get('locale','Unknown'),
-        'creationDate': creation_date,  # Add the current creation date in the desired format
-        'picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
+        'DateJoined': creation_date,  # Add the current creation date in the desired format
+        'IsActive': 'true',
+        'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
         'Friends': "",
+        'Email': email,
         'Links': "",
         'Notifications': "",
         'Achievements': "",
-        'isActive': 'true'
+        'LinksClickedId': "",
     }
 
     try:
@@ -46,3 +47,5 @@ def lambda_handler(event, context):
     except Exception as e:
         print(f"Error adding user {email} to DynamoDB: {str(e)}")
         raise
+    
+    
