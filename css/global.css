@@ -73,3 +73,24 @@ header.navbar .btn {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
 }
+
+.notification-container {
+  position: relative;
+  display: inline-block; /* Or 'block', depending on layout */
+}
+
+/* The dot itself */
+.notification-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #dc3545; /* Bootstrap's danger red */
+  border-radius: 50%;
+  border: 2px solid white; /* Makes it stand out from the button background */
+  
+  /* To help with visibility if the button moves */
+  transform: translate(25%, -25%);
+}
+

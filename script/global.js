@@ -31,38 +31,68 @@ function buildNavBar() {
   const header = document.querySelector("header.navbar");
   if (!header) return;
 
-  // 1) NAVBAR HTML
+  // NAVBAR HTML structure
   header.innerHTML = `
     <div class="container d-flex align-items-center">
-      <!-- Offcanvas toggle button -->
-      <button
-        id="nav-friends-toggle"
-        class="btn btn-outline-primary me-3 btn-lg"
-        type="button"
-        title="Friends & Requests"
-      >👥</button>
-
-      <!-- Home button -->
+      <div id="nav-friends-container" class="notification-container">
+        <button
+          id="nav-friends-toggle"
+          class="btn btn-outline-primary me-3 btn-lg"
+          type="button"
+          title="Friends & Requests"
+        >👥</button>
+      </div>
       <button id="nav-home" class="btn btn-primary btn-lg me-3">
         Home
       </button>
-
-      <!-- Search input -->
       <input
         id="nav-search"
         class="form-control search-input me-auto"
         placeholder="Search…"
       />
-
-      <!-- Login/Profile/Dashboard/Logout container -->
       <div id="nav-buttons" class="d-flex ms-3"></div>
     </div>
   `;
 
+  // --- Click handler for the Friends/Social button ---
+  header.querySelector("#nav-friends-toggle").onclick = () => {
+    // 1. Give instant visual feedback by removing the dot.
+    const container = document.getElementById("nav-friends-container");
+    const dot = container.querySelector('.notification-dot');
+    if (dot) {
+      dot.remove();
+    }
+    
+    // 2. Call the new Lambda in the background to mark notifications as read.
+    if (currentUserID) {
+      fetch(API + 'notifications/markread', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserID })
+      })
+      .then(response => {
+        if (!response.ok) {
+          console.error('API call to mark notifications as read failed.');
+        } else {
+          console.log('Successfully marked notifications as read.');
+        }
+      })
+      .catch(error => {
+        console.error('Error sending mark as read request:', error);
+      });
+    }
+
+    // 3. Show the offcanvas panel immediately without waiting for the API.
+    const offcanvasEl = document.getElementById("friendsOffcanvas");
+    const off = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+    off.toggle();
+  };
+
+  // (The rest of the buildNavBar function for home, search, login, etc. remains the same...)
   header.querySelector("#nav-home").onclick = () => {
     window.location.href = "index.html";
   };
-
+  
   header.querySelector("#nav-search").addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -71,15 +101,8 @@ function buildNavBar() {
       window.location.href = "index.html";
     }
   });
-
-  // 4) FRIENDS offcanvas toggle
-  header.querySelector("#nav-friends-toggle").onclick = () => {
-    const offcanvasEl = document.getElementById("friendsOffcanvas");
-    const off = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-    off.toggle();
-  };
-
-  const btns = header.querySelector("#nav-buttons");
+  
+   const btns = header.querySelector("#nav-buttons");
   btns.innerHTML = "";
 
   if (!currentUserID) {
@@ -111,15 +134,14 @@ function buildNavBar() {
       };
     }
 
-    // Logout
     btns.insertAdjacentHTML(
       "beforeend",
       `<button id="nav-logout" class="btn btn-secondary">Logout</button>`
     );
     header.querySelector("#nav-logout").onclick = signOff;
   }
-
-  if (!document.getElementById("friendsOffcanvas")) {
+  
+    if (!document.getElementById("friendsOffcanvas")) {
     document.body.insertAdjacentHTML(
       "beforeend",
       `

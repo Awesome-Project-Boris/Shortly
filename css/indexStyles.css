@@ -138,6 +138,44 @@ body {
   background-color: #ddd;
 }
 
+
+.table-card {
+  padding: 0;
+  border: 1px solid #dee2e6; /* Softer border */
+}
+
+/* Style the table header */
+.table-card .bootstrap-table .fixed-table-header th {
+  background-color: #f8f9fa; /* Very light grey */
+  border-bottom: 2px solid #dee2e6; /* Heavier bottom border for separation */
+  color: #212529; /* Darker, more readable text */
+  font-weight: 600; /* Bolder headers */
+  padding: 1rem; /* More vertical space */
+}
+
+/* Style the table rows */
+.table-card td {
+  padding: 1rem; /* More vertical space */
+  border-top: 1px solid #dee2e6;
+}
+
+/* Remove alternating background color for a cleaner look */
+.table-card .table-striped>tbody>tr:nth-of-type(odd)>* {
+  --bs-table-accent-bg: transparent;
+}
+
+/* Style the row on hover */
+.table-card .table-hover>tbody>tr:hover>* {
+  --bs-table-accent-bg: #f5f5f5; /* Subtle hover effect */
+}
+
+/* Adjust the search input in the toolbar */
+.table-card .bootstrap-table .form-control-sm {
+  font-size: 1rem;
+  padding: .5rem .75rem;
+  border-radius: .25rem;
+}
+
 /* ─────────────────────────────────────────────
      Responsive Tweaks
   ───────────────────────────────────────────── */

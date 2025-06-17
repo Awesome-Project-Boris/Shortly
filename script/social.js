@@ -1,203 +1,173 @@
-// social.js
-// runs after jQuery, Bootstrap & global.js
+// social.js - REFACTORED FOR CLIENT-SIDE HANDLING
 
 $(document).ready(() => {
-  const API_URL = API; // from global.js
-  const container = $("#usersContainer");
-  const pagination = $("#pagination");
-  const searchIn = $("#userSearchInput");
-  const searchBtn = $("#userSearchBtn");
+    const API_URL = API; // from global.js
+    const container = $("#usersContainer");
+    const pagination = $("#pagination");
+    const searchIn = $("#userSearchInput");
+    const searchBtn = $("#userSearchBtn");
+    const useMock = Array.isArray(window.MOCK_USERS); // Keep mock as fallback
+    const USERS_PER_PAGE = 10;
 
-  let pagesData = {}; // cache per page
-  let totalPages = 0;
-  let currentPage = 1;
-  let searchQuery = "";
+    let allUsers = []; // Stores the complete list of users from the server
+    let displayedUsers = []; // Stores the currently filtered list of users
+    
+    let currentPage = 1;
 
-  // Detect mock
-  const useMock = Array.isArray(window.MOCK_USERS);
+    /**
+     * Renders a specific page of users from the displayedUsers array and builds pagination controls.
+     * @param {number} page - The page number to display.
+     */
+    function displayPage(page) {
+        currentPage = page;
+        pagination.empty(); // Clear old pagination
 
-  // Fetch total pages (all vs. search)
-  async function fetchCount() {
-    if (useMock) {
-      const arr = filterMock();
-      totalPages = Math.ceil(arr.length / 10) || 1;
-      return;
-    }
-    try {
-      const url = searchQuery
-        ? `${API_URL}Users/search/count?query=${encodeURIComponent(
-            searchQuery
-          )}`
-        : `${API_URL}Users/count`;
-      const res = await fetch(url);
-      const { body } = await res.json();
-      const count = JSON.parse(body).count ?? JSON.parse(body);
-      totalPages = Math.ceil(count / 10) || 1;
-    } catch (e) {
-      console.error("Count error:", e);
-      totalPages = 1;
-    }
-  }
+        const totalPages = Math.ceil(displayedUsers.length / USERS_PER_PAGE);
+        
+        if (totalPages === 0) {
+            container.html(`<div class="user-card no-users">No users found</div>`);
+            return;
+        }
 
-  // Pagination window
-  function getPagesWindow() {
-    const maxShow = 5;
-    if (totalPages <= maxShow) {
-      return [...Array(totalPages)].map((_, i) => i + 1);
-    }
-    const half = Math.floor(maxShow / 2);
-    let start = currentPage - half;
-    let end = currentPage + half;
-    if (start < 1) {
-      start = 1;
-      end = maxShow;
-    }
-    if (end > totalPages) {
-      end = totalPages;
-      start = totalPages - maxShow + 1;
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  }
+        // --- Pagination Window Logic (to show a limited number of page links) ---
+        const maxShow = 5;
+        let startPage, endPage;
+        if (totalPages <= maxShow) {
+            startPage = 1;
+            endPage = totalPages;
+        } else {
+            const maxPagesBeforeCurrent = Math.floor(maxShow / 2);
+            const maxPagesAfterCurrent = Math.ceil(maxShow / 2) - 1;
+            if (currentPage <= maxPagesBeforeCurrent) {
+                startPage = 1;
+                endPage = maxShow;
+            } else if (currentPage + maxPagesAfterCurrent >= totalPages) {
+                startPage = totalPages - maxShow + 1;
+                endPage = totalPages;
+            } else {
+                startPage = currentPage - maxPagesBeforeCurrent;
+                endPage = currentPage + maxPagesAfterCurrent;
+            }
+        }
 
-  // Render pagination
-  function renderPagination() {
-    pagination.empty();
-    const prevDisabled = currentPage === 1 ? "disabled" : "";
-    const nextDisabled = currentPage === totalPages ? "disabled" : "";
+        // --- Render Pagination Buttons ---
+        const prevDisabled = currentPage === 1 ? "disabled" : "";
+        pagination.append(`<li class="page-item ${prevDisabled}"><a class="page-link" href="#">Prev</a></li>`);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const activeClass = i === currentPage ? "active" : "";
+            pagination.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#">${i}</a></li>`);
+        }
 
-    pagination.append(`
-      <li class="page-item ${prevDisabled}">
-        <a class="page-link" href="#">Prev</a>
-      </li>`);
-
-    getPagesWindow().forEach((p) =>
-      pagination.append(`
-        <li class="page-item ${p === currentPage ? "active" : ""}">
-          <a class="page-link" href="#">${p}</a>
-        </li>`)
-    );
-
-    pagination.append(`
-      <li class="page-item ${nextDisabled}">
-        <a class="page-link" href="#">Next</a>
-      </li>`);
-  }
-
-  // Handle page clicks
-  pagination.on("click", "a", (e) => {
-    e.preventDefault();
-    const txt = $(e.currentTarget).text();
-    let tgt = currentPage;
-    if (txt === "Prev" && currentPage > 1) tgt = currentPage - 1;
-    else if (txt === "Next" && currentPage < totalPages) tgt = currentPage + 1;
-    else if (!isNaN(+txt)) tgt = +txt;
-    if (tgt !== currentPage) loadPage(tgt);
-  });
-
-  // Filter mock data
-  function filterMock() {
-    if (!useMock) return [];
-    if (!searchQuery) return window.MOCK_USERS;
-    return window.MOCK_USERS.filter((u) =>
-      u.username.toLowerCase().includes(searchQuery)
-    );
-  }
-
-  // Load & render a page
-  async function loadPage(page) {
-    currentPage = page;
-    renderPagination();
-    if (pagesData[page]) {
-      return renderUsers(pagesData[page]);
+        const nextDisabled = currentPage === totalPages ? "disabled" : "";
+        pagination.append(`<li class="page-item ${nextDisabled}"><a class="page-link" href="#">Next</a></li>`);
+        
+        // --- Slice and render the users for the current page ---
+        const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+        const endIndex = startIndex + USERS_PER_PAGE;
+        const pageUsers = displayedUsers.slice(startIndex, endIndex);
+        
+        renderUserCards(pageUsers);
     }
 
-    // show spinner
-    container.html(`
-      <div class="loading-spinner text-center">
-        <div class="spinner-border" role="status"></div>
-      </div>`);
+    /**
+     * Renders the user card HTML into the container.
+     * @param {Array} users - The array of user objects to render.
+     */
+    function renderUserCards(users) {
+        container.empty();
+        if (!users.length) {
+            container.html(`<div class="user-card no-users">No users match your search.</div>`);
+            return;
+        }
+        users.forEach((u) => {
+            // Normalize field names from either API (PascalCase) or mock (camelCase)
+            const userId = u.UserId || u.userID;
+            const username = u.Username || u.username;
+            const linkCount = u.Links ? u.Links.length : (u.linkCount || 0); // Handle Links as array or count
+            const picUrl = u.Picture || u.picture || "https://placehold.co/80x80/007bff/FFFFFF?text=??"; // Default avatar
 
-    if (useMock) {
-      const arr = filterMock();
-      const start = (page - 1) * 10;
-      const users = arr.slice(start, start + 10);
-      pagesData[page] = users;
-      return renderUsers(users);
+            const card = $(`
+                <div class="user-card mb-2" data-userid="${userId}">
+                    <div class="d-flex align-items-center">
+                        <img src="${picUrl}" alt="${username}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;"/>
+                        <span class="username ms-3 fs-5">${username}</span>
+                    </div>
+                    <span class="links-count text-muted">
+                        Links: ${linkCount}
+                    </span>
+                </div>`);
+                
+            card.on("click", function() {
+                window.location.href = `profile.html?userID=${$(this).data('userid')}`;
+            });
+            container.append(card);
+        });
     }
 
-    // real fetch
-    try {
-      const offset = (page - 1) * 10;
-      const url = searchQuery
-        ? `${API_URL}Users/search?query=${encodeURIComponent(
-            searchQuery
-          )}&offset=${offset}&limit=10`
-        : `${API_URL}Users/all?offset=${offset}&limit=10`;
-      const res = await fetch(url);
-      const { body } = await res.json();
-      const users = JSON.parse(body);
-      pagesData[page] = users;
-      renderUsers(users);
-    } catch (e) {
-      console.error("Load error:", e);
-      container.html(`
-        <div class="text-center text-danger py-3">
-          Failed to load users.
-        </div>`);
+    /**
+     * Filters the 'allUsers' array based on the search input and re-renders the page.
+     */
+    function doSearch() {
+        const query = searchIn.val().trim().toLowerCase();
+        if (query) {
+            displayedUsers = allUsers.filter(u => 
+                (u.Username || u.username).toLowerCase().includes(query)
+            );
+        } else {
+            displayedUsers = allUsers; // If search is empty, show all users
+        }
+        displayPage(1); // Reset to the first page of results
     }
-  }
 
-  // Render user cards
-  function renderUsers(users) {
-    if (!users.length) {
-      container.html(`
-        <div class="user-card no-users">
-          No users found
-        </div>`);
-      return;
-    }
-    container.empty();
-    users.forEach((u) => {
-      const picUrl = u.picture || "";
-      const card = $(`
-        <div class="user-card mb-2">
-          <div class="d-flex align-items-center">
-            <img src="${picUrl}" alt="${u.username}" />
-            <span class="username ms-3">${u.username}</span>
-          </div>
-          <span class="links-count">
-            Links available: ${u.linkCount}
-          </span>
-        </div>`);
-      card.on(
-        "click",
-        () => (window.location.href = `profile.html?userID=${u.userID}`)
-      );
-      container.append(card);
+    // --- Event Handlers ---
+    searchBtn.on("click", doSearch);
+    searchIn.on("keyup", doSearch); // Make search more responsive
+
+    pagination.on("click", "a", function(e) {
+        e.preventDefault();
+        const targetPageText = $(this).text();
+        const totalPages = Math.ceil(displayedUsers.length / USERS_PER_PAGE);
+        let targetPage = currentPage;
+
+        if (targetPageText === "Prev" && currentPage > 1) {
+            targetPage--;
+        } else if (targetPageText === "Next" && currentPage < totalPages) {
+            targetPage++;
+        } else if (!isNaN(parseInt(targetPageText))) {
+            targetPage = parseInt(targetPageText);
+        }
+        
+        if (targetPage !== currentPage) {
+            displayPage(targetPage);
+        }
     });
-  }
 
-  // Search handlers
-  function doSearch() {
-    searchQuery = searchIn.val().trim().toLowerCase();
-    pagesData = {};
-    currentPage = 1;
-    fetchCount()
-      .then(() => renderPagination())
-      .then(() => loadPage(1));
-  }
-  searchBtn.on("click", doSearch);
-  searchIn.on("keypress", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      doSearch();
+    // --- Initial Data Load ---
+    async function init() {
+        if (useMock) {
+            console.log("Using mock user data.");
+            allUsers = window.MOCK_USERS;
+            displayedUsers = allUsers;
+            displayPage(1);
+            return;
+        } 
+        
+        try {
+            // Assumes you have a 'Users/all' endpoint that returns a complete list
+            const res = await fetch(`${API_URL}Users/all`); 
+            if (!res.ok) throw new Error(`API responded with status ${res.status}`);
+            const { body } = await res.json();
+            const users = JSON.parse(body);
+
+            allUsers = users;
+            displayedUsers = allUsers;
+            displayPage(1);
+        } catch (e) {
+            console.error("Failed to load users from API:", e);
+            container.html(`<div class="text-center text-danger py-3">Failed to load users. Please try again later.</div>`);
+        }
     }
-  });
 
-  // Init
-  (async () => {
-    await fetchCount();
-    renderPagination();
-    loadPage(1);
-  })();
+    init();
 });

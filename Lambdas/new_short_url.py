@@ -8,19 +8,6 @@ import boto3
 # Initialize DynamoDB table from environment variables
 TABLE_name = "Links"
 DOMAIN = 'https://short.ly'
-
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_name)
-
-
-def generate_code(length: int = 8) -> str:
-    """
-    Generate a random base62 string for the short code.
-    """
-    alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
-
-
 def lambda_handler(event, context):
     # Parse incoming request body
     try:
@@ -61,14 +48,14 @@ def lambda_handler(event, context):
     # Generate a unique short code, retrying on collisions
     code = generate_code()
     while True:
-        resp = table.get_item(Key={'linkID': code})
+        resp = table.get_item(Key={'linkId': code})
         if 'Item' not in resp:
             break
         code = generate_code()
 
     # Prepare item to store
     item = {
-        'linkID': code,
+        'linkId': code,
         'string': long_url,
         'name': name,
         'description': description,

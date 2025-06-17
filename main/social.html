@@ -10,14 +10,13 @@
       rel="stylesheet"
       crossorigin="anonymous"
     />
-
+    <!-- The user's original CSS files -->
     <link rel="stylesheet" href="../css/indexStyles.css" />
-
     <link rel="stylesheet" href="../css/global.css" />
-
     <link rel="stylesheet" href="../css/social.css" />
 
-    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Deferred scripts for faster page load -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script
       defer
       src="https://code.jquery.com/jquery-3.6.0.min.js"
@@ -29,13 +28,13 @@
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
       crossorigin="anonymous"
     ></script>
-    <script defer src="../script/mockUsers.js"></script>
-    <!--MOCK!!!!!!!!!!!!!!-->
-    <script defer src="../script/global.js"></script>
-    <script defer src="../script/social.js"></script>
+    <script src="../script/mockUsers.js"></script>
+    <script src="../script/global.js"></script>
+    <script src="../script/social.js"></script> <!-- This will be the new version -->
   </head>
 
   <body>
+    <!-- The header will be built by global.js -->
     <header
       class="navbar navbar-expand-lg navbar-light bg-light shadow-sm"
     ></header>
@@ -46,28 +45,35 @@
         <hr class="divider" />
       </div>
 
+      <!-- Search Section -->
       <div class="row justify-content-center mb-4">
-        <div class="col-md-6">
+        <div class="col-md-8 col-lg-6">
           <div class="input-group">
             <input
               id="userSearchInput"
-              type="text"
+              type="search"
               class="form-control"
-              placeholder="Search users..."
+              placeholder="Search by username..."
+              aria-label="Search for users by username"
             />
-            <button id="userSearchBtn" class="btn btn-primary">Search</button>
+            <button id="userSearchBtn" class="btn btn-primary" aria-label="Search">Search</button>
           </div>
         </div>
       </div>
 
+      <!-- User Cards Container -->
       <div class="table-card">
-        <div id="usersContainer">
-          <div class="loading-spinner text-center">
-            <div class="spinner-border" role="status"></div>
+        <!-- This container is populated by social.js. It shows a spinner initially. -->
+        <div id="usersContainer" aria-live="polite">
+          <div class="loading-spinner text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading users...</span>
+            </div>
           </div>
         </div>
 
-        <nav>
+        <!-- Pagination Controls -->
+        <nav aria-label="User pagination" class="mt-4">
           <ul
             id="pagination"
             class="pagination justify-content-center mt-3 mb-0"
