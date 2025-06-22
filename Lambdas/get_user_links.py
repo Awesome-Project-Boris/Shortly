@@ -58,7 +58,7 @@ def lambda_handler(event, context):
                 link.pop("IsPasswordProtected", None)
                 links.append(link)
 
-        return _response(200, {"links": links})
+        return _response(200, {"data": links})
 
     except Exception as e:
         return _response(500, {"message": str(e)})
@@ -80,7 +80,7 @@ def _response(status_code, body):
 # Create mock event
 mock_event = {
     "body": json.dumps({
-        "UserId": "a1"
+        "UserId": "894980c8-e8a6-4921-9bb0-f917671caa65"
     })
 }
 
