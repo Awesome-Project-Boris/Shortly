@@ -73,14 +73,14 @@ def handler(event, context):
     }
 
 # Create mock event with test user ID
-test_event = {
-    'body': json.dumps({
-        'UserId': '894980c8-e8a6-4921-9bb0-f917671caa65'
-    })
-}
+# test_event = {
+#     'body': json.dumps({
+#         'UserId': '894980c8-e8a6-4921-9bb0-f917671caa65'
+#     })
+# }
 
-# Call the lambda handler with mock event
-response = handler(test_event, None)
+# # Call the lambda handler with mock event
+# response = handler(test_event, None)
 
-# Print response
-print(json.dumps(response, indent=2))
+# # Print response
+# print(json.dumps(response, indent=2))

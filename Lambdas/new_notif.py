@@ -74,18 +74,18 @@ def lambda_handler(event, context):
         'body': json.dumps({'message': 'Notification queued', 'NotificationID': notification_id})
     }
 # Create mock event with test notification data
-test_event = {
-    'body': json.dumps({
-        'FromUserId': 'user123',
-        'ToUserId': 'user456', 
-        'Status': 'pending',
-        'IsRead': 0,
-        'Text': 'This is a test notification',
-        'LinkId': 'link789',
+# test_event = {
+#     'body': json.dumps({
+#         'FromUserId': 'user123',
+#         'ToUserId': 'user456', 
+#         'Status': 'pending',
+#         'IsRead': 0,
+#         'Text': 'This is a test notification',
+#         'LinkId': 'link789',
         
-    })
-}
+#     })
+# }
 
-# Call lambda handler with test event
-result = lambda_handler(test_event, None)
-print(result)
+# # Call lambda handler with test event
+# result = lambda_handler(test_event, None)
+# print(result)

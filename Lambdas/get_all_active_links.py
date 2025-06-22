@@ -53,10 +53,10 @@ def lambda_handler(event, context):
         'body': json.dumps({'links': links}, default=_decimal_default)
     }
 # Create mock event
-mock_event = {}
+# mock_event = {}
 
-# Call lambda handler with mock event
-result = lambda_handler(mock_event, None)
+# # Call lambda handler with mock event
+# result = lambda_handler(mock_event, None)
 
-# Print result
-print(json.dumps(result, indent=2))
+# # Print result
+# print(json.dumps(result, indent=2))

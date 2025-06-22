@@ -98,16 +98,16 @@ def lambda_handler(event, context):
     }
 
 # Example test event
-if __name__ == "__main__":
-    test_event = {
-        'body': json.dumps({
-            'url': 'https://www.public.com/url/that/needs/shortening/too/3',
-            'userId': '894980c8-e8a6-4921-9bb0-f917671caa65',
-            'name': 'Public Test Link',
-            'description': 'This is a test link',
-            'isPrivate': False,
-            'isPasswordProtected': True,
-            'password': 'secretpassword123'
-        })
-    }
-    print(lambda_handler(test_event, None))
+# if __name__ == "__main__":
+#     test_event = {
+        # 'body': json.dumps({
+        #     'url': 'https://www.public.com/url/that/needs/shortening/too/3',
+        #     'userId': '894980c8-e8a6-4921-9bb0-f917671caa65',
+        #     'name': 'Public Test Link',
+        #     'description': 'This is a test link',
+        #     'isPrivate': False,
+        #     'isPasswordProtected': True,
+        #     'password': 'secretpassword123'
+        # })
+#     }
+#     print(lambda_handler(test_event, None))

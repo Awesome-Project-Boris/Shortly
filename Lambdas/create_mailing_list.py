@@ -99,16 +99,16 @@ def lambda_handler(event, context):
     }
         
 # Create a mock event with test data
-test_event = {
-    'body': {
-        'UserId': 'Allie1',
-        'RecipientIds': ['d4', 'Chuck3'],
-        'ListName': 'Test Mailing List'
-    }
-}
+# test_event = {
+#     'body': {
+#         'UserId': 'Allie1',
+#         'RecipientIds': ['d4', 'Chuck3'],
+#         'ListName': 'Test Mailing List'
+#     }
+# }
 
-# Call the lambda handler with the test event
-result = lambda_handler(test_event, None)
+# # Call the lambda handler with the test event
+# result = lambda_handler(test_event, None)
 
-# Print the result
-print(json.dumps(result, indent=2))
+# # Print the result
+# print(json.dumps(result, indent=2))
