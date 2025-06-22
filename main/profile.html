@@ -172,5 +172,30 @@
   </div>
 </div>
 
+ <!-- Enter password protected link modal-->
+
+    <div class="modal fade" id="passwordAccessModal" tabindex="-1" aria-labelledby="passwordAccessModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 text-center d-block">
+        <h5 class="modal-title" id="passwordAccessModalLabel">
+            <img src="../media/lock.png" width="20" alt="Protected" class="me-2" style="margin-top: -4px;">
+            Password Required
+        </h5>
+      </div>
+      <div class="modal-body px-4">
+        <p class="text-muted text-center small" id="passwordAccessDescription">This link is protected. Please enter the password to continue.</p>
+        <div class="mb-3">
+          <input type="password" id="accessPasswordInput" class="form-control form-control-lg text-center" placeholder="••••••••">
+          <small id="passwordAccessError" class="text-danger d-block text-center mt-2"></small>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button id="unlockLinkBtn" type="button" class="btn btn-primary w-100 btn-lg">Unlock Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
   </body>
 </html>

@@ -116,3 +116,20 @@ header.navbar .btn {
 .friend-request-card {
   cursor: default;
 }
+
+/* Add this to css/global.css */
+
+#passwordAccessModal .modal-content {
+    border-radius: 0.75rem;
+}
+
+#passwordAccessModal #accessPasswordInput.is-invalid {
+    border-color: #dc3545;
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}

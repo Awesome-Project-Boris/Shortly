@@ -291,3 +291,56 @@ $(document).ready(async function() {
   });
 
 });
+
+async function handleProtectedLinkClick(linkData) {
+    // NOTE: Ensure the modal HTML from the previous step is in your index.html
+    const passwordModal = new bootstrap.Modal(document.getElementById('passwordAccessModal'));
+    const passwordInput = $('#accessPasswordInput');
+    const errorMsg = $('#passwordAccessError');
+    const unlockBtn = $('#unlockLinkBtn');
+
+    // Reset modal state for a clean appearance
+    passwordInput.val('').removeClass('is-invalid');
+    errorMsg.text('');
+    passwordModal.show();
+
+    // Attach a one-time click handler to the unlock button to prevent multiple submissions
+    unlockBtn.off('click').on('click', async function() {
+        const password = passwordInput.val();
+        if (!password) {
+            errorMsg.text('Password cannot be empty.');
+            passwordInput.addClass('is-invalid');
+            return;
+        }
+
+        addSpinnerToButton(this);
+        errorMsg.text('');
+        passwordInput.removeClass('is-invalid');
+
+        try {
+            const resp = await fetch(API + 'links/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    linkId: linkData.LinkId || linkData.linkID, // Handle both casing conventions
+                    password: password
+                })
+            });
+            const result = await resp.json();
+
+            if (result.accessGranted) {
+                passwordModal.hide();
+                // Redirect to the original URL provided by the server
+                window.location.href = result.originalUrl;
+            } else {
+                errorMsg.text(result.message || 'Incorrect password.');
+                passwordInput.addClass('is-invalid');
+            }
+        } catch (e) {
+            console.error('Password verification failed:', e);
+            errorMsg.text('An error occurred. Please try again.');
+        } finally {
+            restoreButton(this);
+        }
+    });
+}
