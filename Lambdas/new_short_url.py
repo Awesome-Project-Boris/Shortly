@@ -6,22 +6,36 @@ from datetime import datetime
 import boto3
 
 # Initialize DynamoDB table from environment variables
-TABLE_name = "Links"
-DOMAIN = 'https://short.ly'
+TABLE_NAME = 'Links'
+
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(TABLE_NAME)
+
+
+def generate_code(length: int = 8) -> str:
+    """
+    Generate a random base62 string for the short code.
+    """
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
 def lambda_handler(event, context):
     # Parse incoming request body
     try:
         body = json.loads(event.get('body', '{}'))
         long_url = body['url']
+        user_id = body['userId']
     except (json.JSONDecodeError, KeyError):
         return {
             'statusCode': 400,
             'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Allow-Methods': 'OPTIONS,POST'
-            }, 
-            'body': json.dumps({'error': 'Request must be JSON with a "url" field.'})
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST'
+            },
+            'body': json.dumps({'error': 'Request must be JSON with "url" and "userId" fields.'})
         }
 
     # Extract optional fields with defaults
@@ -36,9 +50,9 @@ def lambda_handler(event, context):
         return {
             'statusCode': 400,
             'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Allow-Methods': 'OPTIONS,POST'
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
             'body': json.dumps({'error': 'Password must be provided when isPasswordProtected is true.'})
         }
@@ -48,51 +62,52 @@ def lambda_handler(event, context):
     # Generate a unique short code, retrying on collisions
     code = generate_code()
     while True:
-        resp = table.get_item(Key={'linkId': code})
+        resp = table.get_item(Key={'LinkId': code})
         if 'Item' not in resp:
             break
         code = generate_code()
 
-    # Prepare item to store
+    # Prepare item to store, now including UserId
     item = {
-        'linkId': code,
-        'string': long_url,
-        'name': name,
-        'description': description,
-        'isPrivate': is_private,
-        'isPasswordProtected': is_password_protected,
-        'password': password,
-        'numberOfClicks': 0,
-        'date': datetime.utcnow().isoformat()
+        'LinkId': code,
+        'UserId': user_id,
+        'String': long_url,
+        'Name': name,
+        'Description': description,
+        'IsPrivate': is_private,
+        'IsPasswordProtected': is_password_protected,
+        'Password': password,
+        'NumberOfClicks': 0,
+        'Date': datetime.utcnow().isoformat(),
+        'IsActive': True
     }
 
     # Write to DynamoDB
     table.put_item(Item=item)
 
-    # Construct the short URL
-    # short_url = f"{DOMAIN}/r/{code}"
-
-    # Return response
+    # Return response with the new code
     return {
         'statusCode': 200,
-            'headers': {
+        'headers': {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Content-Type',
             'Access-Control-Allow-Methods': 'OPTIONS,POST',
             'Content-Type': 'application/json'
-            },
+        },
         'body': json.dumps({'code': code})
     }
 
-test_event = {
-    'body': json.dumps({
-        'url': 'https://www.example.com/url/that/needs/shortening/too',
-        'name': 'Example Link',
-        'description': 'This is a test link',
-        'isPrivate': True,
-        'isPasswordProtected': True,
-        'password': 'secretpassword123'
-    })
-}
+# Example test event
 if __name__ == "__main__":
+    test_event = {
+        'body': json.dumps({
+            'url': 'https://www.public.com/url/that/needs/shortening/too/3',
+            'userId': '894980c8-e8a6-4921-9bb0-f917671caa65',
+            'name': 'Public Test Link',
+            'description': 'This is a test link',
+            'isPrivate': False,
+            'isPasswordProtected': True,
+            'password': 'secretpassword123'
+        })
+    }
     print(lambda_handler(test_event, None))
