@@ -46,10 +46,10 @@ def lambda_handler(event, context):
     }
 
 # Create mock event
-mock_event = {}
+# mock_event = {}
 
-# Call lambda handler with mock event and None for context
-response = lambda_handler(mock_event, None)
+# # Call lambda handler with mock event and None for context
+# response = lambda_handler(mock_event, None)
 
-# Print response
-print(json.dumps(response, indent=2))
+# # Print response
+# print(json.dumps(response, indent=2))

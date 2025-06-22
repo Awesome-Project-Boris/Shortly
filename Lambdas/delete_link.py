@@ -66,14 +66,14 @@ def lambda_handler(event, context):
     }
 
 # Create a mock event with a sample LinkId
-mock_event = {
-    'body': json.dumps({
-        'LinkId': 'gjJ4OGlx'
-    })
-}
+# mock_event = {
+#     'body': json.dumps({
+#         'LinkId': 'gjJ4OGlx'
+#     })
+# }
 
-# Call the lambda handler with the mock event
-response = lambda_handler(mock_event, None)
+# # Call the lambda handler with the mock event
+# response = lambda_handler(mock_event, None)
 
-# Print the response
-print(json.dumps(response, indent=2))
+# # Print the response
+# print(json.dumps(response, indent=2))

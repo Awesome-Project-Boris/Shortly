@@ -29,6 +29,7 @@ def lambda_handler(event, context):
             link_resp = link_table.get_item(Key={"LinkId": link_id})
             link = link_resp.get("Item")
             if link:
+                link.pop("Password", None)
                 links.append(link)
 
         return _res(200, links)
