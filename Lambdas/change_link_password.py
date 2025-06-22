@@ -60,7 +60,7 @@ def lambda_handler(event, context):
         # --- Step 2: Verify Ownership ---
         # DEVELOPER NOTE: This assumes you have an 'ownerId' attribute on your 'Links' table
         # that stores the userID of the user who created the link. This is critical for security.
-        if link_item.get('ownerId') != user_id:
+        if link_item.get('UserId') != user_id:
             return {
                 'statusCode': 403, # Forbidden
                 'headers': cors_headers,
