@@ -4,26 +4,55 @@ $(document).ready(async function () {
   const me = localStorage.getItem("userID");
   const isOwner = profileID === me;
 
+  // This single API call now fetches the user's info, achievements, and links all at once.
   try {
-    const resp = await fetch(API + 'Users/byid', {
+    // NOTE: The endpoint name 'Users/profile' should match the API Gateway route for your new get_user_by_id_rewritten Lambda.
+    const resp = await fetch(API + 'Users/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: profileID })
+        // The request body now sends both the profile owner's ID and the logged-in user's ID.
+        body: JSON.stringify({ 
+            ProfileOwnerId: profileID,
+            LoggedInUserId: me
+        })
     });
+
+    if (!resp.ok) {
+        throw new Error(`Failed to fetch profile data. Status: ${resp.status}`);
+    }
+
     const body = await resp.json();
+    // The response body from the Lambda is directly parsed.
     const data = typeof body.body === "string" ? JSON.parse(body.body) : body.body;
 
-    $("#userName").text(`User name: ${data.username}`);
-    $("#user-name").text(`Full Name: ${data.name}`);
+    // Deconstruct the response payload into its three main parts.
+    const { userInfo, achievements, links } = data;
+
+    // --- Populate Profile Header ---
+    $("#userName").text(`User name: ${userInfo.Username}`);
+    $("#user-name").text(`Full Name: ${userInfo.FullName}`);
     $("#user-joined").text(
-      `Date Joined: ${new Date(data.creationDate).toLocaleDateString()}`
+      `Date Joined: ${new Date(userInfo.DateJoined).toLocaleDateString()}`
     );
-    $("#user-items-count").text(`Links created: ${data.linkCount ?? 0}`);
-    $(".profile-pic").attr("src", data.picture);
+    // The link count is now derived from the length of the returned links array.
+    $("#user-items-count").text(`Links created: ${links.length}`);
+    $(".profile-pic").attr("src", userInfo.Picture);
+
+    // --- Render Achievements ---
+    // This function will create and display the achievements section.
+    renderAchievements(achievements);
+
+    // --- Render Links DataTable ---
+    // This uses the same logic as before, but now gets the 'links' data from the consolidated API call.
+    initializeLinksTable(links, isOwner);
+
   } catch (e) {
     console.error("Failed to load profile:", e);
+    // You could show an error message to the user on the page here.
+    $("#userName").text("Could not load profile.");
   }
 
+  // The friend request logic remains unchanged as it's independent of the profile data load.
   if (!isOwner && me) {
     $("#friendRequestBtn")
       .show()
@@ -46,39 +75,77 @@ $(document).ready(async function () {
       });
   }
 
-  // Fetch & render links DataTable
-  let links = [];
-  try {
-    const resp = await fetch(API + 'Links/created', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: profileID })
-    });
-    const body = await resp.json();
-    links = JSON.parse(body.body);
-  } catch (e) {
-    console.error("Failed to load links:", e);
-  }
+  // The modal logic for link details is also unchanged, as it depends on the DataTable,
+  // which is initialized by the initializeLinksTable function.
+  initializeModalLogic(isOwner);
 
+});
+
+/**
+ * Renders the list of achievements on the profile page.
+ * NOTE: This assumes you have a container in your HTML like: <div id="achievementsContainer"></div>
+ * @param {Array} achievements - The array of achievement objects.
+ */
+function renderAchievements(achievements) {
+    const container = $('#achievementsContainer');
+    if (!container.length) {
+        console.error('Achievement container not found. Please add <div id="achievementsContainer" class="section"></div> to your HTML.');
+        return;
+    }
+    
+    container.empty(); // Clear previous content
+    
+    const title = $('<div class="section-header"><h3 class="section-title">Achievements</h3></div>');
+    container.append(title);
+
+    if (!achievements || achievements.length === 0) {
+        container.append('<p class="text-muted">This user has not earned any achievements yet.</p>');
+        return;
+    }
+    
+    const list = $('<div class="achievements-list"></div>');
+    achievements.forEach(ach => {
+        // Here we assume the achievement object has a nested 'Achievement' object with the name
+        const achievementName = ach.Achievement?.Name || `Achievement ${ach.AchievementId}`;
+        const earnedDate = new Date(ach.DateEarned).toLocaleDateString();
+        const achievementHtml = `
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
+                <div class="achievement-details">
+                    <span class="achievement-name">${achievementName} on "${ach.LinkName}"</span>
+                    <span class="achievement-date">Earned on ${earnedDate}</span>
+                </div>
+            </div>
+        `;
+        list.append(achievementHtml);
+    });
+
+    container.append(list);
+}
+
+/**
+ * Initializes the DataTable for the user's links.
+ * @param {Array} links - The array of link objects.
+ * @param {boolean} isOwner - Whether the current viewer owns the profile.
+ */
+function initializeLinksTable(links, isOwner) {
   const columns = [
-    { data: "name", title: "Link name" },
-    { data: "description", title: "Description" },
+    { data: "Name", title: "Link name" },
+    { data: "Description", title: "Description" },
     {
-      data: "shortUrl",
+      data: "shortUrl", // Assuming this field exists on the link object
       title: "Link",
-      render: (u) => `<a href="${u}" target="_blank">${u}</a>`,
+      render: (u) => u ? `<a href="${u}" target="_blank">${u}</a>` : 'N/A',
     },
   ];
   if (isOwner) {
     columns.push({
-      data: "isPublic",
+      data: "IsPrivate",
       title: "Visible/Private",
-      render: (v) => (v ? "Public" : "Private"),
+      render: (v) => (v ? "Private" : "Public"),
     });
 
-    // only retitle the *first* section header (the links one)
     $(".section-header").first().find(".section-title").text("Your links");
-
     $("#linksTable").addClass("owner-view");
   }
 
@@ -90,202 +157,186 @@ $(document).ready(async function () {
     info: false,
     lengthChange: false,
     pageLength: 10,
+    destroy: true, // Important for re-initialization if needed
     language: {
       search: "_INPUT_",
       searchPlaceholder: "Filter links...",
     },
   });
+}
 
-  // ─────────────────────────────────────────────
-  // 6) LINK‐DETAILS MODAL (owner only)
-  // ─────────────────────────────────────────────
+/**
+ * Sets up all the event listeners for the link details modal.
+ * @param {boolean} isOwner - Whether the current viewer owns the profile.
+ */
+function initializeModalLogic(isOwner) {
+    const linkModal = new bootstrap.Modal(document.getElementById('linkDetailModal'));
+    let selectedLink = null;
+    const currentUserID = localStorage.getItem("userID");
 
-  // WE ASSUME WE GET THIS FROM THE SERVER:
+    $('#linksTable tbody').on('click', 'tr', async function () {
+        const rowData = $('#linksTable').DataTable().row(this).data();
+        if (!isOwner || !rowData) return;
 
-  // {
-  //   clicksByCountry: { "USA": 123, "Canada": 45, … },
-  //   password:        "hunter2" | null,
-  //   isPublic:        true|false
-  // }
+        selectedLink = rowData;
+        $('#linkDetailModalLabel').text(`Statistics for "${selectedLink.Name}"`);
 
-  const linkModal = new bootstrap.Modal(document.getElementById('linkDetailModal'));
-let selectedLink = null; // Store the entire link object
-const currentUserID = localStorage.getItem("userID"); // Get the logged-in user's ID
+        $('#totalClicks').text('...');
+        $('#countryStatsContainer').html('<div class="spinner-border spinner-border-sm text-primary" role="status"></div>');
+        linkModal.show();
 
-// --- Open Modal on Row Click ---
-$('#linksTable tbody').on('click', 'tr', async function () {
-    const rowData = $('#linksTable').DataTable().row(this).data();
-    if (!isOwner || !rowData) return;
+        try {
+            const resp = await fetch(API + 'links/details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ linkId: selectedLink.LinkId })
+            });
+            if (!resp.ok) throw new Error('Failed to fetch link details');
+            const info = await resp.json();
 
-    selectedLink = rowData;
-    $('#linkDetailModalLabel').text(`Statistics for "${selectedLink.Name}"`);
+            $('#totalClicks').text(info.TotalClicks);
+            renderCountryStats(info.clicksByCountry);
+            
+            $('#linkVisibilitySwitch').prop('checked', !info.IsPrivate);
+            
+            if (info.IsPasswordProtected) {
+                $('#passwordSection').show();
+                $('#revealedPasswordText').data('password', info.Password || '');
+            } else {
+                $('#passwordSection').hide();
+            }
+            
+            $('#currentPassword, #newPassword').val('');
+            $('#passwordUpdateError').text('');
+            $('#revealedPassword').hide();
 
-    // Reset view before showing
-    $('#totalClicks').text('...');
-    $('#countryStatsContainer').html('<div class="spinner-border spinner-border-sm text-primary" role="status"></div>');
-    linkModal.show();
+        } catch (e) {
+            console.error("Error loading link details:", e);
+            createPopupError("Could not load link details.");
+            $('#countryStatsContainer').html('<p class="text-danger small">Could not load stats.</p>');
+        }
+    });
 
-    try {
-        const resp = await fetch(API + 'links/details', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ linkId: selectedLink.LinkId })
-        });
-        if (!resp.ok) throw new Error('Failed to fetch link details');
-        const info = await resp.json();
+    $('#saveLinkChangesBtn').click(async function () {
+        const isPublic = $('#linkVisibilitySwitch').prop('checked');
+        const btn = this;
+        addSpinnerToButton(btn);
 
-        // --- Populate the Modal with New Data ---
-        $('#totalClicks').text(info.TotalClicks);
-        renderCountryStats(info.clicksByCountry);
-        
-        $('#linkVisibilitySwitch').prop('checked', !info.IsPrivate);
-        
-        if (info.IsPasswordProtected) {
-            $('#passwordSection').show();
-            $('#revealedPasswordText').data('password', info.Password || '');
-        } else {
-            $('#passwordSection').hide();
+        try {
+            const resp = await fetch(API + 'Links/privacy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    linkId: selectedLink.LinkId,
+                    isPrivate: !isPublic
+                }),
+            });
+            if (!resp.ok) throw new Error('Failed to update visibility.');
+            
+            createPopup('Visibility updated!');
+            linkModal.hide();
+            // This is a placeholder for reloading the table data. You might need a more robust solution.
+            location.reload(); 
+        } catch (e) {
+            console.error("Save visibility failed:", e);
+            createPopupError('Could not save visibility.');
+        } finally {
+            restoreButton(btn);
+        }
+    });
+
+    $('#changePasswordBtn').click(async function() {
+        const currentPassword = $('#currentPassword').val();
+        const newPassword = $('#newPassword').val();
+        const btn = this;
+
+        if (!currentPassword || !newPassword) {
+            $('#passwordUpdateError').text('Both fields are required.');
+            return;
+        }
+        if (newPassword.length < 4) {
+            $('#passwordUpdateError').text('New password must be at least 4 characters.');
+            return;
         }
         
-        $('#currentPassword, #newPassword').val('');
         $('#passwordUpdateError').text('');
-        $('#revealedPassword').hide();
+        addSpinnerToButton(btn);
 
-    } catch (e) {
-        console.error("Error loading link details:", e);
-        createPopupError("Could not load link details.");
-        $('#countryStatsContainer').html('<p class="text-danger small">Could not load stats.</p>');
-    }
-});
+        try {
+            const resp = await fetch(API + 'Links/password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    linkId: selectedLink.LinkId,
+                    userId: currentUserID,
+                    currentPassword: currentPassword,
+                    newPassword: newPassword,
+                }),
+            });
 
-// --- Save Visibility Changes ---
-$('#saveLinkChangesBtn').click(async function () {
-    const isPublic = $('#linkVisibilitySwitch').prop('checked');
-    const btn = this;
-    addSpinnerToButton(btn);
+            const result = await resp.json();
+            
+            if (!resp.ok) {
+                throw new Error(result.message || 'An unknown error occurred.');
+            }
 
-    try {
-        // This should call your 'update_link_privacy' or 'toggle_link_privacy' Lambda
-        const resp = await fetch(API + 'Links/privacy', { // Assuming endpoint name
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                linkId: selectedLink.linkID,
-                isPrivate: !isPublic // isPublic is the opposite of IsPrivate
-            }),
-        });
-        if (!resp.ok) throw new Error('Failed to update visibility.');
-        
-        createPopup('Visibility updated!');
-        linkModal.hide();
-        // You may need to refresh your DataTable to see the change
-        $('#linksTable').DataTable().ajax.reload(null, false);
-    } catch (e) {
-        console.error("Save visibility failed:", e);
-        createPopupError('Could not save visibility.');
-    } finally {
-        restoreButton(btn);
-    }
-});
+            createPopup('Password changed successfully!');
+            $('#currentPassword, #newPassword').val('');
+            $('#revealedPasswordText').data('password', newPassword);
 
-// --- Change Password ---
-$('#changePasswordBtn').click(async function() {
-    const currentPassword = $('#currentPassword').val();
-    const newPassword = $('#newPassword').val();
-    const btn = this;
-
-    // Basic validation
-    if (!currentPassword || !newPassword) {
-        $('#passwordUpdateError').text('Both fields are required.');
-        return;
-    }
-    if (newPassword.length < 4) {
-        $('#passwordUpdateError').text('New password must be at least 4 characters.');
-        return;
-    }
-    
-    $('#passwordUpdateError').text('');
-    addSpinnerToButton(btn);
-
-    try {
-        const resp = await fetch(API + 'Links/password', { // Assuming endpoint from previous step
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                linkId: selectedLink.linkID,
-                userId: currentUserID,
-                currentPassword: currentPassword,
-                newPassword: newPassword,
-            }),
-        });
-
-        const result = await resp.json();
-        
-        if (!resp.ok) {
-            // Use the error message from the Lambda function
-            throw new Error(result.message || 'An unknown error occurred.');
+        } catch(e) {
+            console.error("Password change failed:", e);
+            $('#passwordUpdateError').text(e.message);
+        } finally {
+            restoreButton(btn);
         }
+    });
 
-        createPopup('Password changed successfully!');
-        $('#currentPassword, #newPassword').val(''); // Clear fields
-        // Update the stored password for the reveal feature
-        $('#revealedPasswordText').data('password', newPassword);
+    $('#forgotPasswordBtn').click(function() {
+        const storedPassword = $('#revealedPasswordText').data('password');
+        if (storedPassword) {
+            $('#revealedPasswordText').text(storedPassword);
+            $('#revealedPassword').slideDown();
+        }
+    });
 
-    } catch(e) {
-        console.error("Password change failed:", e);
-        $('#passwordUpdateError').text(e.message); // Show specific error
-    } finally {
-        restoreButton(btn);
-    }
-});
+    $('#deleteLinkBtn').click(async function () {
+        const isConfirmed = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => result.isConfirmed);
 
+        if (!isConfirmed) return;
 
-// --- Forgot/Reveal Password ---
-$('#forgotPasswordBtn').click(function() {
-    const storedPassword = $('#revealedPasswordText').data('password');
-    if (storedPassword) {
-        $('#revealedPasswordText').text(storedPassword);
-        $('#revealedPassword').slideDown();
-    }
-});
+        const btn = this;
+        addSpinnerToButton(btn);
 
-// --- Delete Link ---
-$('#deleteLinkBtn').click(async function () {
-    const isConfirmed = await Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => result.isConfirmed);
+        try {
+            const resp = await fetch(API + 'Links/delete', { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ linkId: selectedLink.LinkId })
+            });
+            if (!resp.ok) throw new Error('Delete request failed.');
 
-    if (!isConfirmed) return;
+            createPopup('Link deleted');
+            linkModal.hide();
+            // Remove the row from the DataTable without a full reload for a smoother UX
+            $('#linksTable').DataTable().row($(this).parents('tr')).remove().draw();
+        } catch (e) {
+            console.error('Delete failed:', e);
+            createPopupError('Could not delete link.');
+        } finally {
+            restoreButton(btn);
+        }
+    });
+}
 
-    const btn = this;
-    addSpinnerToButton(btn);
-
-    try {
-        const resp = await fetch(API + 'Links/delete', { 
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ linkId: selectedLink.LinkId })
-        });
-        if (!resp.ok) throw new Error('Delete request failed.');
-
-        createPopup('Link deleted');
-        linkModal.hide();
-        // Remove the row from the DataTable without a full reload
-        $('#linksTable').DataTable().row('.selected').remove().draw(false);
-    } catch (e) {
-        console.error('Delete failed:', e);
-        createPopupError('Could not delete link.');
-    } finally {
-        restoreButton(btn);
-    }
-});
-});
 
 function renderCountryStats(statsData) {
     const container = $('#countryStatsContainer');
@@ -296,16 +347,11 @@ function renderCountryStats(statsData) {
         return;
     }
 
-    // Find the maximum click count to normalize the bar widths
     const maxClicks = Math.max(...Object.values(statsData));
-
-    // Sort countries by click count, descending
     const sortedCountries = Object.entries(statsData).sort((a, b) => b[1] - a[1]);
 
     sortedCountries.forEach(([country, clicks]) => {
-        // Calculate the width of the bar as a percentage of the max
         const barWidth = (clicks / maxClicks) * 100;
-        
         const barHtml = `
             <div class="stat-bar" style="width: ${barWidth}%;">
                 <span>${country}</span>
@@ -317,18 +363,15 @@ function renderCountryStats(statsData) {
 }
 
 async function handleProtectedLinkClick(linkData) {
-    // NOTE: Ensure the modal HTML is in your profile.html
     const passwordModal = new bootstrap.Modal(document.getElementById('passwordAccessModal'));
     const passwordInput = $('#accessPasswordInput');
     const errorMsg = $('#passwordAccessError');
     const unlockBtn = $('#unlockLinkBtn');
 
-    // Reset modal state
     passwordInput.val('').removeClass('is-invalid');
     errorMsg.text('');
     passwordModal.show();
 
-    // Attach a one-time click handler
     unlockBtn.off('click').on('click', async function() {
         const password = passwordInput.val();
         if (!password) {
