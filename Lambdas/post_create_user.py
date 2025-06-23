@@ -22,8 +22,7 @@ def lambda_handler(event, context):
     # Prepare the user data to insert into DynamoDB
     user_data = {
         'UserId': user_attributes.get('sub', 'Unknown'),  # 'sub' is the unique identifier in Cognito
-        'Username': user_attributes.get('username'),
-        'Nickname': user_attributes.get('nickname', 'unknown'),
+        'Username': user_attributes.get('nickname', 'unknown'),
         'Email': email,
         'FullName': user_attributes.get('name', 'Unknown'),
         'Country': user_attributes.get('locale','Unknown'),
@@ -31,7 +30,6 @@ def lambda_handler(event, context):
         'IsActive': True,
         'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
         'Friends': "",
-        'Email': email,
         'Links': "",
         'Notifications': "",
         'Achievements': "",
@@ -51,3 +49,19 @@ def lambda_handler(event, context):
         raise
     
     
+# Create a mock Cognito event
+# mock_event = {
+#     "Email": "post_user_test@example.com",
+#     "request": {
+#         "userAttributes": {
+#             "sub": "612345",
+#             "nickname": "testuser2",
+#             "name": "Test User",
+#             "locale": "US",
+#             "picture": "images/profile-photos/test.jpg"
+#         }
+#     }
+# }
+
+# # Call lambda handler with mock event
+# response = lambda_handler(mock_event, None)

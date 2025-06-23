@@ -52,3 +52,15 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps({'links': links}, default=_decimal_default)
     }
+
+# Create mock event
+mock_event = {
+    "httpMethod": "GET",
+    "headers": {
+        "Content-Type": "application/json"
+    }
+}
+
+# Call lambda handler with mock event
+response = lambda_handler(None, None)
+print(response)
