@@ -1,83 +1,86 @@
 $(document).ready(async function () {
-  const params = new URLSearchParams(window.location.search);
-  const profileID = params.get("userID");
-  const me = localStorage.getItem("userID");
-  const isOwner = profileID === me;
+    const params = new URLSearchParams(window.location.search);
+    const profileID = params.get("userID");
+    const me = localStorage.getItem("userID");
+    const isOwner = profileID === me;
+    console.log(profileID)
+    console.log(me)
 
-  // This single API call now fetches the user's info, achievements, and links all at once.
-  try {
-    // NOTE: The endpoint name 'Users/profile' should match the API Gateway route for your new get_user_by_id_rewritten Lambda.
-    const resp = await fetch(API + 'Users/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // The request body now sends both the profile owner's ID and the logged-in user's ID.
-        body: JSON.stringify({ 
-            ProfileOwnerId: profileID,
-            LoggedInUserId: me
-        })
-    });
 
-    if (!resp.ok) {
-        throw new Error(`Failed to fetch profile data. Status: ${resp.status}`);
+    // This single API call now fetches the user's info, achievements, and links all at once.
+    try {
+        // NOTE: The endpoint name 'Users/profile' should match the API Gateway route for your new get_user_by_id_rewritten Lambda.
+        const resp = await fetch(API + '/users/get-user-by-id', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // The request body now sends both the profile owner's ID and the logged-in user's ID.
+            body: JSON.stringify({
+                ProfileOwnerId: profileID,
+                LoggedInUserId: me
+            })
+        });
+
+        if (!resp.ok) {
+            throw new Error(`Failed to fetch profile data. Status: ${resp.status}`);
+        }
+
+        const body = await resp.json();
+        // The response body from the Lambda is directly parsed.
+        const data = typeof body.body === "string" ? JSON.parse(body.body) : body.body;
+
+        // Deconstruct the response payload into its three main parts.
+        const { userInfo, achievements, links } = data;
+
+        // --- Populate Profile Header ---
+        $("#userName").text(`User name: ${userInfo.Username}`);
+        $("#user-name").text(`Full Name: ${userInfo.FullName}`);
+        $("#user-joined").text(
+            `Date Joined: ${new Date(userInfo.DateJoined).toLocaleDateString()}`
+        );
+        // The link count is now derived from the length of the returned links array.
+        $("#user-items-count").text(`Links created: ${links.length}`);
+        $(".profile-pic").attr("src", userInfo.Picture);
+
+        // --- Render Achievements ---
+        // This function will create and display the achievements section.
+        renderAchievements(achievements);
+
+        // --- Render Links DataTable ---
+        // This uses the same logic as before, but now gets the 'links' data from the consolidated API call.
+        initializeLinksTable(links, isOwner);
+
+    } catch (e) {
+        console.error("Failed to load profile:", e);
+        // You could show an error message to the user on the page here.
+        $("#userName").text("Could not load profile.");
     }
 
-    const body = await resp.json();
-    // The response body from the Lambda is directly parsed.
-    const data = typeof body.body === "string" ? JSON.parse(body.body) : body.body;
+    // The friend request logic remains unchanged as it's independent of the profile data load.
+    if (!isOwner && me) {
+        $("#friendRequestBtn")
+            .show()
+            .on("click", async function () {
+                const $btn = $(this);
+                addSpinnerToButton(this);
+                try {
+                    const res = await fetch(API + "Friends/request", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ fromUserID: me, toUserID: profileID }),
+                    });
+                    if (!res.ok) throw new Error();
+                    createPopup("Friend request sent!");
+                    $btn.text("Request Sent");
+                } catch {
+                    createPopupError("Could not send friend request.");
+                    restoreButton(this);
+                }
+            });
+    }
 
-    // Deconstruct the response payload into its three main parts.
-    const { userInfo, achievements, links } = data;
-
-    // --- Populate Profile Header ---
-    $("#userName").text(`User name: ${userInfo.Username}`);
-    $("#user-name").text(`Full Name: ${userInfo.FullName}`);
-    $("#user-joined").text(
-      `Date Joined: ${new Date(userInfo.DateJoined).toLocaleDateString()}`
-    );
-    // The link count is now derived from the length of the returned links array.
-    $("#user-items-count").text(`Links created: ${links.length}`);
-    $(".profile-pic").attr("src", userInfo.Picture);
-
-    // --- Render Achievements ---
-    // This function will create and display the achievements section.
-    renderAchievements(achievements);
-
-    // --- Render Links DataTable ---
-    // This uses the same logic as before, but now gets the 'links' data from the consolidated API call.
-    initializeLinksTable(links, isOwner);
-
-  } catch (e) {
-    console.error("Failed to load profile:", e);
-    // You could show an error message to the user on the page here.
-    $("#userName").text("Could not load profile.");
-  }
-
-  // The friend request logic remains unchanged as it's independent of the profile data load.
-  if (!isOwner && me) {
-    $("#friendRequestBtn")
-      .show()
-      .on("click", async function () {
-        const $btn = $(this);
-        addSpinnerToButton(this);
-        try {
-          const res = await fetch(API + "Friends/request", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fromUserID: me, toUserID: profileID }),
-          });
-          if (!res.ok) throw new Error();
-          createPopup("Friend request sent!");
-          $btn.text("Request Sent");
-        } catch {
-          createPopupError("Could not send friend request.");
-          restoreButton(this);
-        }
-      });
-  }
-
-  // The modal logic for link details is also unchanged, as it depends on the DataTable,
-  // which is initialized by the initializeLinksTable function.
-  initializeModalLogic(isOwner);
+    // The modal logic for link details is also unchanged, as it depends on the DataTable,
+    // which is initialized by the initializeLinksTable function.
+    initializeModalLogic(isOwner);
 
 });
 
@@ -92,9 +95,9 @@ function renderAchievements(achievements) {
         console.error('Achievement container not found. Please add <div id="achievementsContainer" class="section"></div> to your HTML.');
         return;
     }
-    
+
     container.empty(); // Clear previous content
-    
+
     const title = $('<div class="section-header"><h3 class="section-title">Achievements</h3></div>');
     container.append(title);
 
@@ -102,7 +105,7 @@ function renderAchievements(achievements) {
         container.append('<p class="text-muted">This user has not earned any achievements yet.</p>');
         return;
     }
-    
+
     const list = $('<div class="achievements-list"></div>');
     achievements.forEach(ach => {
         // Here we assume the achievement object has a nested 'Achievement' object with the name
@@ -129,40 +132,40 @@ function renderAchievements(achievements) {
  * @param {boolean} isOwner - Whether the current viewer owns the profile.
  */
 function initializeLinksTable(links, isOwner) {
-  const columns = [
-    { data: "Name", title: "Link name" },
-    { data: "Description", title: "Description" },
-    {
-      data: "shortUrl", // Assuming this field exists on the link object
-      title: "Link",
-      render: (u) => u ? `<a href="${u}" target="_blank">${u}</a>` : 'N/A',
-    },
-  ];
-  if (isOwner) {
-    columns.push({
-      data: "IsPrivate",
-      title: "Visible/Private",
-      render: (v) => (v ? "Private" : "Public"),
+    const columns = [
+        { data: "Name", title: "Link name" },
+        { data: "Description", title: "Description" },
+        {
+            data: "shortUrl", // Assuming this field exists on the link object
+            title: "Link",
+            render: (u) => u ? `<a href="${u}" target="_blank">${u}</a>` : 'N/A',
+        },
+    ];
+    if (isOwner) {
+        columns.push({
+            data: "IsPrivate",
+            title: "Visible/Private",
+            render: (v) => (v ? "Private" : "Public"),
+        });
+
+        $(".section-header").first().find(".section-title").text("Your links");
+        $("#linksTable").addClass("owner-view");
+    }
+
+    $("#linksTable").DataTable({
+        data: links,
+        columns: columns,
+        paging: true,
+        searching: true,
+        info: false,
+        lengthChange: false,
+        pageLength: 10,
+        destroy: true, // Important for re-initialization if needed
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Filter links...",
+        },
     });
-
-    $(".section-header").first().find(".section-title").text("Your links");
-    $("#linksTable").addClass("owner-view");
-  }
-
-  $("#linksTable").DataTable({
-    data: links,
-    columns: columns,
-    paging: true,
-    searching: true,
-    info: false,
-    lengthChange: false,
-    pageLength: 10,
-    destroy: true, // Important for re-initialization if needed
-    language: {
-      search: "_INPUT_",
-      searchPlaceholder: "Filter links...",
-    },
-  });
 }
 
 /**
@@ -196,16 +199,16 @@ function initializeModalLogic(isOwner) {
 
             $('#totalClicks').text(info.TotalClicks);
             renderCountryStats(info.clicksByCountry);
-            
+
             $('#linkVisibilitySwitch').prop('checked', !info.IsPrivate);
-            
+
             if (info.IsPasswordProtected) {
                 $('#passwordSection').show();
                 $('#revealedPasswordText').data('password', info.Password || '');
             } else {
                 $('#passwordSection').hide();
             }
-            
+
             $('#currentPassword, #newPassword').val('');
             $('#passwordUpdateError').text('');
             $('#revealedPassword').hide();
@@ -232,11 +235,11 @@ function initializeModalLogic(isOwner) {
                 }),
             });
             if (!resp.ok) throw new Error('Failed to update visibility.');
-            
+
             createPopup('Visibility updated!');
             linkModal.hide();
             // This is a placeholder for reloading the table data. You might need a more robust solution.
-            location.reload(); 
+            location.reload();
         } catch (e) {
             console.error("Save visibility failed:", e);
             createPopupError('Could not save visibility.');
@@ -245,7 +248,7 @@ function initializeModalLogic(isOwner) {
         }
     });
 
-    $('#changePasswordBtn').click(async function() {
+    $('#changePasswordBtn').click(async function () {
         const currentPassword = $('#currentPassword').val();
         const newPassword = $('#newPassword').val();
         const btn = this;
@@ -258,7 +261,7 @@ function initializeModalLogic(isOwner) {
             $('#passwordUpdateError').text('New password must be at least 4 characters.');
             return;
         }
-        
+
         $('#passwordUpdateError').text('');
         addSpinnerToButton(btn);
 
@@ -275,7 +278,7 @@ function initializeModalLogic(isOwner) {
             });
 
             const result = await resp.json();
-            
+
             if (!resp.ok) {
                 throw new Error(result.message || 'An unknown error occurred.');
             }
@@ -284,7 +287,7 @@ function initializeModalLogic(isOwner) {
             $('#currentPassword, #newPassword').val('');
             $('#revealedPasswordText').data('password', newPassword);
 
-        } catch(e) {
+        } catch (e) {
             console.error("Password change failed:", e);
             $('#passwordUpdateError').text(e.message);
         } finally {
@@ -292,7 +295,7 @@ function initializeModalLogic(isOwner) {
         }
     });
 
-    $('#forgotPasswordBtn').click(function() {
+    $('#forgotPasswordBtn').click(function () {
         const storedPassword = $('#revealedPasswordText').data('password');
         if (storedPassword) {
             $('#revealedPasswordText').text(storedPassword);
@@ -317,7 +320,7 @@ function initializeModalLogic(isOwner) {
         addSpinnerToButton(btn);
 
         try {
-            const resp = await fetch(API + 'Links/delete', { 
+            const resp = await fetch(API + 'Links/delete', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ linkId: selectedLink.LinkId })
@@ -372,7 +375,7 @@ async function handleProtectedLinkClick(linkData) {
     errorMsg.text('');
     passwordModal.show();
 
-    unlockBtn.off('click').on('click', async function() {
+    unlockBtn.off('click').on('click', async function () {
         const password = passwordInput.val();
         if (!password) {
             errorMsg.text('Password cannot be empty.');

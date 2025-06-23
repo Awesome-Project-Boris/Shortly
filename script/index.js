@@ -1,5 +1,5 @@
 // index.js
-$(document).ready(async function() {
+$(document).ready(async function () {
   const userID = localStorage.getItem("userID");
   const API_URL = API; // Assuming 'API' is defined in global.js
 
@@ -10,8 +10,8 @@ $(document).ready(async function() {
   }
 
   $('#linksTable').bootstrapTable({
-    data: window.MOCK_LINKS || [], // Use the mock data from mockUsers.js
-    //url: `${API_URL}/links`, // Use the actual API URL for server-side data
+    // data: window.MOCK_LINKS || [],                                         // Using the mock data from mockUsers.js
+    url: `${API_URL}/links/get-all-links`, // Use the actual API URL for server-side data                                    VVV
     classes: 'table-striped table-hover',
     pagination: true,
     pageSize: 20, // A page size of 20 is more typical for client-side data
@@ -38,7 +38,7 @@ $(document).ready(async function() {
       width: 40,
       formatter: (value) => value ? '<img src="../media/lock.png" width="16" alt="Protected">' : ''
     }],
-    onClickRow: function(row) {
+    onClickRow: function (row) {
       if (String(row.ownerId) === userID) {
         // For mock data, we can't really navigate. You might show an alert.
         alert(`Navigating to your link: ${row.shortUrl}`);
@@ -61,7 +61,7 @@ $(document).ready(async function() {
   });
 
   // Go→Link button
-  $('#goToLinkBtn').click(function() {
+  $('#goToLinkBtn').click(function () {
     const pw = $('#accessPassword').val().trim();
     if (window._needsPassword && !pw) {
       return $('#accessError').text('Password required');
@@ -75,8 +75,121 @@ $(document).ready(async function() {
   // action buttons
   $('#newLinkBtn').click(() => {
     if (!userID) return createPopupWarning('Please log in to add a link');
-    window.location.href = 'new_item.html';
+
+    // Reset form fields from any previous use
+    $('#createLinkForm')[0].reset();
+    $('#passwordInputContainer').hide();
+    $('#createLinkForm .is-invalid').removeClass('is-invalid');
+
+    // Show the modal
+    new bootstrap.Modal($('#createLinkModal')[0]).show();
   });
+
+  $('#friendsBtn').click(() => {
+    if (!userID) return createPopupWarning('Please log in to view friends');
+    window.location.href = 'social.html';
+  });
+
+  // --- Create Link Modal Specific Logic ---
+
+  // Show/hide password input based on toggle
+  $('#isPasswordProtected').on('change', function () {
+    if ($(this).is(':checked')) {
+      $('#passwordInputContainer').slideDown();
+    } else {
+      $('#passwordInputContainer').slideUp();
+      $('#linkPassword').val('').removeClass('is-invalid'); // Clear password on hide
+    }
+  });
+
+  // Character counters for name and description
+  $('#linkName, #linkDescription').on('input', function () {
+    const el = $(this);
+    const maxLength = el.attr('maxlength');
+    const currentLength = el.val().length;
+    el.next('small').text(`${currentLength}/${maxLength}`);
+  });
+
+
+  // Handle the final "Create Link" button click
+  $('#submitCreateLinkBtn').click(async function () {
+    const userID = localStorage.getItem("userID");
+    if (!userID) return createPopupError('You must be logged in.');
+
+    const form = $('#createLinkForm')[0];
+    const originalUrlInput = $('#originalUrl');
+    const passwordInput = $('#linkPassword');
+    const isPasswordProtected = $('#isPasswordProtected').is(':checked');
+
+    // --- Client-side Validation ---
+    let isValid = true;
+    // Reset previous errors
+    $('.is-invalid').removeClass('is-invalid');
+
+    // Check URL validity
+    if (!form.checkValidity() || !originalUrlInput.val().trim()) {
+      originalUrlInput.addClass('is-invalid');
+      isValid = false;
+    }
+
+    // Check password if protection is enabled
+    if (isPasswordProtected && !passwordInput.val().trim()) {
+      passwordInput.addClass('is-invalid');
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // --- Prepare and Send API Request ---
+    const btn = this;
+    addSpinnerToButton(btn);
+
+    const payload = {
+      url: originalUrlInput.val().trim(),
+      userId: userID,
+      name: $('#linkName').val().trim(),
+      description: $('#linkDescription').val().trim(),
+      isPrivate: $('#isPrivate').is(':checked'),
+      isPasswordProtected: isPasswordProtected,
+      password: passwordInput.val() // Send even if empty, Lambda will handle it
+    };
+
+    try {
+      const resp = await fetch(API + 'links', { // Assuming your endpoint is '/links'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.error || 'Failed to create link.');
+      }
+
+      const result = await resp.json();
+
+      // Hide the modal on success
+      bootstrap.Modal.getInstance($('#createLinkModal')[0]).hide();
+
+      // Show a success message with the new short URL
+      Swal.fire({
+        icon: 'success',
+        title: 'Link Created!',
+        html: `Your new short link is: <br><a href="${result.shortUrl}" target="_blank">${result.shortUrl}</a>`,
+      });
+
+      // Optionally, refresh the main links table to show the new link
+      $('#linksTable').bootstrapTable('refresh');
+
+    } catch (e) {
+      console.error("Create link failed:", e);
+      createPopupError(e.message);
+    } finally {
+      restoreButton(btn);
+    }
+  });
+
+
   $('#friendsBtn').click(() => {
     if (!userID) return createPopupWarning('Please log in to view friends');
     window.location.href = 'social.html';
@@ -84,11 +197,11 @@ $(document).ready(async function() {
 
   // modals
   const createModal = new bootstrap.Modal($('#createGroupModal')[0]);
-  const shareModal  = new bootstrap.Modal($('#shareLinkModal')[0]);
+  const shareModal = new bootstrap.Modal($('#shareLinkModal')[0]);
 
   // CREATE GROUP
-  let groupEmails    = [], groupFriendIDs = [];
-  $('#createGroupBtn').click(function() {
+  let groupEmails = [], groupFriendIDs = [];
+  $('#createGroupBtn').click(function () {
     groupEmails = [];
     groupFriendIDs = [];
     $('#groupName').val('').removeClass('is-invalid');
@@ -100,10 +213,10 @@ $(document).ready(async function() {
     createModal.show();
   });
 
-  $('#groupName').on('input', function() {
+  $('#groupName').on('input', function () {
     const len = this.value.length;
     $('#groupNameCounter').text(`${len}/50`);
-    $(this).toggleClass('is-invalid', !len || len>50);
+    $(this).toggleClass('is-invalid', !len || len > 50);
   });
   $('#addGroupEmailBtn').click(() => {
     const val = $('#groupEmailInput').val().trim().toLowerCase();
@@ -124,8 +237,8 @@ $(document).ready(async function() {
           ${e}
           <button type="button" class="btn-close btn-close-white btn-sm ms-2"></button>
         </span>`);
-      $chip.find('button').click(()=> {
-        groupEmails = groupEmails.filter(x=>x!==e);
+      $chip.find('button').click(() => {
+        groupEmails = groupEmails.filter(x => x !== e);
         renderGroupEmailList();
       });
       $c.append($chip);
@@ -140,10 +253,10 @@ $(document).ready(async function() {
           <img src="${f.picture}" width="24" height="24" class="rounded-circle">
           <span class="ms-1">${f.username}</span>
         </label>`);
-      $lbl.find('input').on('change', function() {
+      $lbl.find('input').on('change', function () {
         const id = this.value;
         if (this.checked) groupFriendIDs.push(id);
-        else groupFriendIDs = groupFriendIDs.filter(x=>x!==id);
+        else groupFriendIDs = groupFriendIDs.filter(x => x !== id);
       });
       $c.append($lbl);
     });
@@ -151,7 +264,7 @@ $(document).ready(async function() {
   $('#submitCreateGroupBtn').click(async () => {
     const name = $('#groupName').val().trim();
     $('#groupNameError,#groupEmailError,#groupFriendsError').text('');
-    if (!name || name.length>50) {
+    if (!name || name.length > 50) {
       $('#groupNameError').text('Required, max 50 chars');
       return $('#groupName').addClass('is-invalid');
     }
@@ -162,14 +275,14 @@ $(document).ready(async function() {
     const btn = $('#submitCreateGroupBtn').get(0);
     addSpinnerToButton(btn);
     try {
-      await fetch(API+'Groups', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+      await fetch(API + 'mailing_list', {                                                        // VVV
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
           initiatorId: userID,
           recipientsEmails: groupEmails,
-          recipientsIds:   groupFriendIDs
+          recipientsIds: groupFriendIDs
         })
       });
       createPopup('Group created!');
@@ -197,7 +310,7 @@ $(document).ready(async function() {
     renderShareFriendsList(window.MOCK_FRIENDS || []);
     shareModal.show();
   });
-  $('#addShareEmailBtn').click(()=>{
+  $('#addShareEmailBtn').click(() => {
     const val = $('#shareEmailInput').val().trim().toLowerCase();
     $('#shareEmailError').text('');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))
@@ -216,8 +329,8 @@ $(document).ready(async function() {
           ${e}
           <button type="button" class="btn-close btn-close-white btn-sm ms-2"></button>
         </span>`);
-      $chip.find('button').click(()=>{
-        shareEmails = shareEmails.filter(x=>x!==e);
+      $chip.find('button').click(() => {
+        shareEmails = shareEmails.filter(x => x !== e);
         renderShareEmailList();
       });
       $c.append($chip);
@@ -225,44 +338,44 @@ $(document).ready(async function() {
   }
   function renderShareGroupList(groups) {
     const $c = $('#shareGroupList').empty();
-    groups.forEach(g=>{
+    groups.forEach(g => {
       const $lbl = $(`
         <label class="badge bg-light text-dark d-flex align-items-center">
           <input type="checkbox" class="form-check-input me-1" value="${g.groupID}">
           <span class="ms-1">${g.name}</span>
         </label>`);
-      $lbl.find('input').on('change',function(){
-        const id=this.value;
-        if(this.checked) shareGroupIDs.push(id);
-        else shareGroupIDs = shareGroupIDs.filter(x=>x!==id);
+      $lbl.find('input').on('change', function () {
+        const id = this.value;
+        if (this.checked) shareGroupIDs.push(id);
+        else shareGroupIDs = shareGroupIDs.filter(x => x !== id);
       });
       $c.append($lbl);
     });
   }
   function renderShareFriendsList(friends) {
     const $c = $('#shareFriendsList').empty();
-    friends.forEach(f=>{
+    friends.forEach(f => {
       const $lbl = $(`
         <label class="badge bg-light text-dark d-flex align-items-center">
           <input type="checkbox" class="form-check-input me-1" value="${f.userID}">
           <img src="${f.picture}" width="24" height="24" class="rounded-circle">
           <span class="ms-1">${f.username}</span>
         </label>`);
-      $lbl.find('input').on('change',function(){
-        const id=this.value;
-        if(this.checked) shareFriendIDs.push(id);
-        else shareFriendIDs = shareFriendIDs.filter(x=>x!==id);
+      $lbl.find('input').on('change', function () {
+        const id = this.value;
+        if (this.checked) shareFriendIDs.push(id);
+        else shareFriendIDs = shareFriendIDs.filter(x => x !== id);
       });
       $c.append($lbl);
     });
   }
-  $('#submitShareLinkBtn').click(async ()=>{
+  $('#submitShareLinkBtn').click(async () => {
     const linkID = $('#shareLinkSelect').val();
     $('#shareLinkError,#shareGroupError,#shareFriendsError,#shareEmailError').text('');
-    if(!linkID) {
+    if (!linkID) {
       return $('#shareLinkError').text('Pick a link');
     }
-    if(!shareGroupIDs.length && !shareFriendIDs.length && !shareEmails.length) {
+    if (!shareGroupIDs.length && !shareFriendIDs.length && !shareEmails.length) {
       $('#shareGroupError,#shareFriendsError,#shareEmailError')
         .text('Add at least one group, friend or email');
       return;
@@ -270,14 +383,14 @@ $(document).ready(async function() {
     const btn = $('#submitShareLinkBtn').get(0);
     addSpinnerToButton(btn);
     try {
-      await fetch(API+'Links/share',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+      await fetch(API + 'links/share', {                                                         //     VVV
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderId:         userID,
-          linkId:           linkID,
-          groupIds:         shareGroupIDs,
-          friendIds:        shareFriendIDs,
+          senderId: userID,
+          linkId: linkID,
+          groupIds: shareGroupIDs,
+          friendIds: shareFriendIDs,
           recipientsEmails: shareEmails
         })
       });
@@ -293,54 +406,54 @@ $(document).ready(async function() {
 });
 
 async function handleProtectedLinkClick(linkData) {
-    // NOTE: Ensure the modal HTML from the previous step is in your index.html
-    const passwordModal = new bootstrap.Modal(document.getElementById('passwordAccessModal'));
-    const passwordInput = $('#accessPasswordInput');
-    const errorMsg = $('#passwordAccessError');
-    const unlockBtn = $('#unlockLinkBtn');
+  // NOTE: Ensure the modal HTML from the previous step is in your index.html
+  const passwordModal = new bootstrap.Modal(document.getElementById('passwordAccessModal'));
+  const passwordInput = $('#accessPasswordInput');
+  const errorMsg = $('#passwordAccessError');
+  const unlockBtn = $('#unlockLinkBtn');
 
-    // Reset modal state for a clean appearance
-    passwordInput.val('').removeClass('is-invalid');
+  // Reset modal state for a clean appearance
+  passwordInput.val('').removeClass('is-invalid');
+  errorMsg.text('');
+  passwordModal.show();
+
+  // Attach a one-time click handler to the unlock button to prevent multiple submissions
+  unlockBtn.off('click').on('click', async function () {
+    const password = passwordInput.val();
+    if (!password) {
+      errorMsg.text('Password cannot be empty.');
+      passwordInput.addClass('is-invalid');
+      return;
+    }
+
+    addSpinnerToButton(this);
     errorMsg.text('');
-    passwordModal.show();
+    passwordInput.removeClass('is-invalid');
 
-    // Attach a one-time click handler to the unlock button to prevent multiple submissions
-    unlockBtn.off('click').on('click', async function() {
-        const password = passwordInput.val();
-        if (!password) {
-            errorMsg.text('Password cannot be empty.');
-            passwordInput.addClass('is-invalid');
-            return;
-        }
+    try {
+      const resp = await fetch(API + 'links/verify-link-password', {           //                         VVV
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          linkId: linkData.LinkId || linkData.linkID, // Handle both casing conventions
+          password: password
+        })
+      });
+      const result = await resp.json();
 
-        addSpinnerToButton(this);
-        errorMsg.text('');
-        passwordInput.removeClass('is-invalid');
-
-        try {
-            const resp = await fetch(API + 'links/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    linkId: linkData.LinkId || linkData.linkID, // Handle both casing conventions
-                    password: password
-                })
-            });
-            const result = await resp.json();
-
-            if (result.accessGranted) {
-                passwordModal.hide();
-                // Redirect to the original URL provided by the server
-                window.location.href = result.originalUrl;
-            } else {
-                errorMsg.text(result.message || 'Incorrect password.');
-                passwordInput.addClass('is-invalid');
-            }
-        } catch (e) {
-            console.error('Password verification failed:', e);
-            errorMsg.text('An error occurred. Please try again.');
-        } finally {
-            restoreButton(this);
-        }
-    });
+      if (result.accessGranted) {
+        passwordModal.hide();
+        // Redirect to the original URL provided by the server
+        window.location.href = result.originalUrl;
+      } else {
+        errorMsg.text(result.message || 'Incorrect password.');
+        passwordInput.addClass('is-invalid');
+      }
+    } catch (e) {
+      console.error('Password verification failed:', e);
+      errorMsg.text('An error occurred. Please try again.');
+    } finally {
+      restoreButton(this);
+    }
+  });
 }

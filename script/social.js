@@ -11,7 +11,7 @@ $(document).ready(() => {
 
     let allUsers = []; // Stores the complete list of users from the server
     let displayedUsers = []; // Stores the currently filtered list of users
-    
+
     let currentPage = 1;
 
     /**
@@ -23,7 +23,7 @@ $(document).ready(() => {
         pagination.empty(); // Clear old pagination
 
         const totalPages = Math.ceil(displayedUsers.length / USERS_PER_PAGE);
-        
+
         if (totalPages === 0) {
             container.html(`<div class="user-card no-users">No users found</div>`);
             return;
@@ -53,7 +53,7 @@ $(document).ready(() => {
         // --- Render Pagination Buttons ---
         const prevDisabled = currentPage === 1 ? "disabled" : "";
         pagination.append(`<li class="page-item ${prevDisabled}"><a class="page-link" href="#">Prev</a></li>`);
-        
+
         for (let i = startPage; i <= endPage; i++) {
             const activeClass = i === currentPage ? "active" : "";
             pagination.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#">${i}</a></li>`);
@@ -61,12 +61,12 @@ $(document).ready(() => {
 
         const nextDisabled = currentPage === totalPages ? "disabled" : "";
         pagination.append(`<li class="page-item ${nextDisabled}"><a class="page-link" href="#">Next</a></li>`);
-        
+
         // --- Slice and render the users for the current page ---
         const startIndex = (currentPage - 1) * USERS_PER_PAGE;
         const endIndex = startIndex + USERS_PER_PAGE;
         const pageUsers = displayedUsers.slice(startIndex, endIndex);
-        
+
         renderUserCards(pageUsers);
     }
 
@@ -97,8 +97,8 @@ $(document).ready(() => {
                         Links: ${linkCount}
                     </span>
                 </div>`);
-                
-            card.on("click", function() {
+
+            card.on("click", function () {
                 window.location.href = `profile.html?userID=${$(this).data('userid')}`;
             });
             container.append(card);
@@ -111,7 +111,7 @@ $(document).ready(() => {
     function doSearch() {
         const query = searchIn.val().trim().toLowerCase();
         if (query) {
-            displayedUsers = allUsers.filter(u => 
+            displayedUsers = allUsers.filter(u =>
                 (u.Username || u.username).toLowerCase().includes(query)
             );
         } else {
@@ -124,7 +124,7 @@ $(document).ready(() => {
     searchBtn.on("click", doSearch);
     searchIn.on("keyup", doSearch); // Make search more responsive
 
-    pagination.on("click", "a", function(e) {
+    pagination.on("click", "a", function (e) {
         e.preventDefault();
         const targetPageText = $(this).text();
         const totalPages = Math.ceil(displayedUsers.length / USERS_PER_PAGE);
@@ -137,7 +137,7 @@ $(document).ready(() => {
         } else if (!isNaN(parseInt(targetPageText))) {
             targetPage = parseInt(targetPageText);
         }
-        
+
         if (targetPage !== currentPage) {
             displayPage(targetPage);
         }
@@ -145,23 +145,30 @@ $(document).ready(() => {
 
     // --- Initial Data Load ---
     async function init() {
-        if (useMock) {
-            console.log("Using mock user data.");
-            allUsers = window.MOCK_USERS;
-            displayedUsers = allUsers;
-            displayPage(1);
-            return;
-        } 
-        
+
+        // if (useMock) {
+        //     console.log("Using mock user data.");
+        //     allUsers = window.MOCK_USERS;
+        //     displayedUsers = allUsers;
+        //     displayPage(1);
+        //     return;
+        // }
+        console.log(API_URL)
+
         try {
             // Assumes you have a 'Users/all' endpoint that returns a complete list
-            const res = await fetch(`${API_URL}Users/all`); 
+            const res = await fetch(`${API_URL}/users/get_all_active_users`);  // VVV
             if (!res.ok) throw new Error(`API responded with status ${res.status}`);
-            const { body } = await res.json();
-            const users = JSON.parse(body);
+            const body = await res.json();
+            //console.log(body.users)
 
+            // const users = JSON.parse(body.users);
+            const users = body.users;
+            console.log(users)
+            // const users = JSON.parse(body);
             allUsers = users;
             displayedUsers = allUsers;
+
             displayPage(1);
         } catch (e) {
             console.error("Failed to load users from API:", e);

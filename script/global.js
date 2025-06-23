@@ -1,7 +1,7 @@
 // In Shortly/script/global.js
 
 // --- Global Configuration ---
-const API = ""; // e.g. "https://xyz.execute-api.us-east-1.amazonaws.com/prod/"
+const API = "https://3gkpxf5218.execute-api.us-east-1.amazonaws.com/prod"; // e.g. "https://xyz.execute-api.us-east-1.amazonaws.com/prod/"
 const websiteURL = ""; // e.g. "https://yourbucket.s3.amazonaws.com"
 const cognitoDomain = ""; // e.g. "https://your-auth-domain.auth.us-east-1.amazoncognito.com"
 const clientId = ""; // your Cognito App Client ID
@@ -36,10 +36,10 @@ function buildNavBar() {
       <input id="nav-search" class="form-control search-input me-auto" placeholder="Search…"/>
       <div id="nav-buttons" class="d-flex ms-3"></div>
     </div>`;
-  
+
   // Attach event handlers
   header.querySelector("#nav-home").onclick = () => window.location.href = "index.html";
-  
+
   header.querySelector("#nav-search").addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -48,13 +48,13 @@ function buildNavBar() {
       window.location.href = "index.html";
     }
   });
-  
+
   // Click handler for the Friends/Social button
   header.querySelector("#nav-friends-toggle").onclick = () => {
     const container = document.getElementById("nav-friends-container");
     const dot = container.querySelector('.notification-dot');
     if (dot) dot.remove();
-    
+
     if (currentUserID) {
       fetch(API + 'notifications/markread', {
         method: 'POST',
@@ -87,7 +87,7 @@ function buildNavBar() {
     btns.insertAdjacentHTML("beforeend", `<button id="nav-logout" class="btn btn-secondary">Logout</button>`);
     header.querySelector("#nav-logout").onclick = signOff;
   }
-  
+
   // Ensure the offcanvas HTML is in the DOM
   if (!document.getElementById("friendsOffcanvas")) {
     document.body.insertAdjacentHTML("beforeend", `
@@ -130,64 +130,64 @@ function goToProfile() {
   } else {
     // Fallback to login if not logged in
     const loginBtn = document.getElementById("nav-login");
-    if(loginBtn) loginBtn.click();
+    if (loginBtn) loginBtn.click();
   }
 }
 
 // --- Off-Canvas Notification Logic ---
 
 async function loadOffcanvasContent() {
-    if (!currentUserID) return;
+  if (!currentUserID) return;
 
-    const requestsContainer = document.getElementById("friendRequestsContainer");
-    const generalContainer = document.getElementById("generalNotificationsContainer");
-    
-    // Show loading spinners
-    requestsContainer.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
-    generalContainer.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
-    
-    // Fetch notifications and friends in parallel for speed
-    try {
-        const [notificationsResp] = await Promise.all([
-            // MODIFIED: Using POST with a body instead of GET with a query string.
-            fetch(API + 'notifications/all', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserID })
-            }),
-            loadFriendsList() // This function handles its own container
-        ]);
-        
-        if (!notificationsResp.ok) throw new Error("Failed to fetch notifications");
-        
-        const data = await notificationsResp.json();
-        
-        renderFriendRequests(data.friendRequests || []);
-        renderOtherNotifications(data.otherNotifications || []);
+  const requestsContainer = document.getElementById("friendRequestsContainer");
+  const generalContainer = document.getElementById("generalNotificationsContainer");
 
-    } catch (e) {
-        console.error("Could not load offcanvas content:", e);
-        requestsContainer.innerHTML = `<div class="text-muted small">Could not load requests.</div>`;
-        generalContainer.innerHTML = `<div class="text-muted small">Could not load notifications.</div>`;
-    }
+  // Show loading spinners
+  requestsContainer.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
+  generalContainer.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
+
+  // Fetch notifications and friends in parallel for speed
+  try {
+    const [notificationsResp] = await Promise.all([
+      // MODIFIED: Using POST with a body instead of GET with a query string.
+      fetch(API + 'notifications/all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserID })
+      }),
+      loadFriendsList() // This function handles its own container
+    ]);
+
+    if (!notificationsResp.ok) throw new Error("Failed to fetch notifications");
+
+    const data = await notificationsResp.json();
+
+    renderFriendRequests(data.friendRequests || []);
+    renderOtherNotifications(data.otherNotifications || []);
+
+  } catch (e) {
+    console.error("Could not load offcanvas content:", e);
+    requestsContainer.innerHTML = `<div class="text-muted small">Could not load requests.</div>`;
+    generalContainer.innerHTML = `<div class="text-muted small">Could not load notifications.</div>`;
+  }
 }
 
 function renderFriendRequests(requests) {
-    const container = document.getElementById("friendRequestsContainer");
-    if (!requests || requests.length === 0) {
-        container.innerHTML = '<div class="text-muted small p-2">No pending friend requests.</div>';
-        return;
-    }
-    
-    container.innerHTML = ""; // Clear spinner
-    requests.forEach(req => {
-        const fromUser = req.FromUser || {}; 
-        const username = fromUser.Username || 'A user';
-        const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+  const container = document.getElementById("friendRequestsContainer");
+  if (!requests || requests.length === 0) {
+    container.innerHTML = '<div class="text-muted small p-2">No pending friend requests.</div>';
+    return;
+  }
 
-        const card = document.createElement("div");
-        card.className = "friend-request-card";
-        card.innerHTML = `
+  container.innerHTML = ""; // Clear spinner
+  requests.forEach(req => {
+    const fromUser = req.FromUser || {};
+    const username = fromUser.Username || 'A user';
+    const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+
+    const card = document.createElement("div");
+    card.className = "friend-request-card";
+    card.innerHTML = `
             <img src="${picture}" alt="${username}" class="rounded-circle" width="40" height="40" />
             <div class="friend-request-info flex-grow-1 mx-2">
                 <strong>${username}</strong> sent you a friend request.
@@ -197,27 +197,27 @@ function renderFriendRequests(requests) {
                 <button class="btn btn-danger btn-sm" title="Reject">✕</button>
             </div>`;
 
-        card.querySelector(".btn-success").onclick = () => respondToRequest(req.NotifId, true, card);
-        card.querySelector(".btn-danger").onclick = () => respondToRequest(req.NotifId, false, card);
-        container.appendChild(card);
-    });
+    card.querySelector(".btn-success").onclick = () => respondToRequest(req.NotifId, true, card);
+    card.querySelector(".btn-danger").onclick = () => respondToRequest(req.NotifId, false, card);
+    container.appendChild(card);
+  });
 }
 
 function renderOtherNotifications(notifications) {
-    const container = document.getElementById("generalNotificationsContainer");
-    if (!notifications || notifications.length === 0) {
-        container.innerHTML = '<div class="text-muted small p-2">No new notifications.</div>';
-        return;
-    }
+  const container = document.getElementById("generalNotificationsContainer");
+  if (!notifications || notifications.length === 0) {
+    container.innerHTML = '<div class="text-muted small p-2">No new notifications.</div>';
+    return;
+  }
 
-    container.innerHTML = ""; // Clear spinner
-    notifications.forEach(note => {
-        const card = document.createElement("div");
-        card.className = "notification-card";
-        card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
-        card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
-        container.appendChild(card);
-    });
+  container.innerHTML = ""; // Clear spinner
+  notifications.forEach(note => {
+    const card = document.createElement("div");
+    card.className = "notification-card";
+    card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
+    card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
+    container.appendChild(card);
+  });
 }
 
 async function respondToRequest(notificationID, accept, cardEl) {
@@ -229,7 +229,7 @@ async function respondToRequest(notificationID, accept, cardEl) {
       body: JSON.stringify({ notificationID, accept }),
     });
     if (!resp.ok) throw new Error("Response not OK");
-    
+
     cardEl.style.transition = 'opacity 0.5s ease';
     cardEl.style.opacity = '0';
     setTimeout(() => cardEl.remove(), 500);
@@ -241,39 +241,39 @@ async function respondToRequest(notificationID, accept, cardEl) {
 }
 
 async function loadFriendsList() {
-    const container = document.getElementById("friendsListContainer");
-    container.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
-    
-    try {
-        // MODIFIED: Using POST with a body instead of GET with a query string.
-        const resp = await fetch(API + "Friends/list", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUserID })
-        });
-        if(!resp.ok) throw new Error("Failed to fetch friends list");
-        const data = await resp.json();
-        const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
-        
-        if (!friends || friends.length === 0) {
-            container.innerHTML = '<div class="text-muted small p-2">You have no friends yet.</div>';
-            return;
-        }
+  const container = document.getElementById("friendsListContainer");
+  container.innerHTML = `<div class="spinner-border spinner-border-sm text-primary mx-auto d-block" role="status"></div>`;
 
-        container.innerHTML = "";
-        friends.forEach(u => {
-            const card = document.createElement("div");
-            card.className = "friend-card"; // This is a clickable card
-            card.innerHTML = `
+  try {
+    // MODIFIED: Using POST with a body instead of GET with a query string.
+    const resp = await fetch(API + "Friends/list", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserID })
+    });
+    if (!resp.ok) throw new Error("Failed to fetch friends list");
+    const data = await resp.json();
+    const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+
+    if (!friends || friends.length === 0) {
+      container.innerHTML = '<div class="text-muted small p-2">You have no friends yet.</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    friends.forEach(u => {
+      const card = document.createElement("div");
+      card.className = "friend-card"; // This is a clickable card
+      card.innerHTML = `
                 <img src="${u.picture || 'https://placehold.co/40x40/6c757d/FFFFFF?text=??'}" alt="${u.username}" class="rounded-circle" width="40" height="40"/>
                 <div class="friend-info ms-2">${u.username}</div>`;
-            card.onclick = () => window.location.href = `profile.html?userID=${u.userID}`;
-            container.appendChild(card);
-        });
-    } catch(e) {
-        console.error("Failed to load friends list:", e);
-        container.innerHTML = `<div class="text-muted small">Could not load friends.</div>`;
-    }
+      card.onclick = () => window.location.href = `profile.html?userID=${u.userID}`;
+      container.appendChild(card);
+    });
+  } catch (e) {
+    console.error("Failed to load friends list:", e);
+    container.innerHTML = `<div class="text-muted small">Could not load friends.</div>`;
+  }
 }
 
 
@@ -286,9 +286,9 @@ async function runUserChecks() {
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
     const resp = await fetch(API + 'notifications/unread', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserID })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserID })
     });
     const data = await resp.json();
     if (data.hasUnreadNotifications) {
@@ -305,9 +305,9 @@ async function runUserChecks() {
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
     const r = await fetch(API + 'Users/byid', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserID })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserID })
     });
     const data = await r.json();
     const user = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
