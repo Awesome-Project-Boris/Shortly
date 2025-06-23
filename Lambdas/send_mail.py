@@ -10,7 +10,7 @@ SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
 SENDER_EMAIL = os.environ['GMAIL_ADDRESS']
 SENDER_PASSWORD = os.environ['GMAIL_PASSWORD']
-MAILING_LIST_TABLE = os.environ['MAILING_LIST_TABLE']  # DynamoDB table name for mailing lists
+MAILING_LIST_TABLE = os.environ.get('MAILING_LIST_TABLE', 'Mailing_Lists')  # DynamoDB table name for mailing lists
 
 # Initialize DynamoDB client for mailing list lookup
 dynamodb = boto3.resource('dynamodb')
@@ -80,3 +80,15 @@ def _response(status_code, body_dict):
         },
         'body': json.dumps(body_dict)
     }
+
+# Create mock event for testing
+# mock_event = {
+#     "body": json.dumps({
+#         "subject": "Test Email",
+#         "mail_body": "This is a test email body",
+#         "recipient_email": "liormasturov@gmail.com"
+#     })
+# }
+
+# # Call lambda handler with mock event
+# result = lambda_handler(mock_event, None)

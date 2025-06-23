@@ -73,9 +73,9 @@ def lambda_handler(event, context):
 
 # Create a mock event with a valid user ID
 # mock_event = {
-#     'body': json.dumps({
-#         'UserId': 'd4'
-#     })
+    # 'body': json.dumps({
+    #     'UserId': 'd4'
+    # })
 # }
 
 # # Call the lambda handler with the mock event
