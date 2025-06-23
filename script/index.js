@@ -74,12 +74,11 @@ $(document).ready(async function () {
 
   // action buttons
   $('#newLinkBtn').click(() => {
-   // if (!userID) return createPopupWarning('Please log in to add a link');
+   if (!userID) return createPopupWarning('Please log in to add a link');
     window.location.href ='new_item.html'
   });
 
   $('#friendsBtn').click(() => {
-    if (!userID) return createPopupWarning('Please log in to view friends');
     window.location.href = 'social.html';
   });
 
@@ -184,7 +183,6 @@ $(document).ready(async function () {
 
 
   $('#friendsBtn').click(() => {
-    if (!userID) return createPopupWarning('Please log in to view friends');
     window.location.href = 'social.html';
   });
 
@@ -195,6 +193,7 @@ $(document).ready(async function () {
   // CREATE GROUP
   let groupEmails = [], groupFriendIDs = [];
   $('#createGroupBtn').click(function () {
+    if (!userID) return createPopupWarning('Please log in to create mailing groups!');
     groupEmails = [];
     groupFriendIDs = [];
     $('#groupName').val('').removeClass('is-invalid');
@@ -212,6 +211,7 @@ $(document).ready(async function () {
     $(this).toggleClass('is-invalid', !len || len > 50);
   });
   $('#addGroupEmailBtn').click(() => {
+    
     const val = $('#groupEmailInput').val().trim().toLowerCase();
     $('#groupEmailError').text('');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))
@@ -290,6 +290,7 @@ $(document).ready(async function () {
   // SHARE LINK
   let shareEmails = [], shareGroupIDs = [], shareFriendIDs = [];
   $('#shareLinkBtn').click(() => {
+    if (!userID) return createPopupWarning('Please log in to share a link!');
     shareEmails = []; shareGroupIDs = []; shareFriendIDs = [];
     $('#shareLinkError,#shareGroupError,#shareFriendsError,#shareEmailError').text('');
     $('#shareLinkSelect').empty().append('<option>Loading…</option>');

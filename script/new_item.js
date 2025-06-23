@@ -80,6 +80,23 @@ $(document).ready(() => {
         }
     });
 
+    $('.cancel').on('click', function() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Any unsaved changes will be lost!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, discard changes'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the index page if confirmed
+                window.location.href = 'index.html';
+            }
+        });
+    });
+
     // Form submission
     $form.on("submit", async (e) => {
         e.preventDefault();
