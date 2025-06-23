@@ -348,6 +348,16 @@ function createPopupError(message) {
     timer: 2500,
   });
 }
+function createPopupWarning(message) {
+  Swal.fire({
+    position: "top",
+    title: `<div class="text-center h5">${message}</div>`,
+    icon: "warning",
+    toast: true,
+    showConfirmButton: false,
+    timer: 2500, // A bit longer for warnings
+  });
+}
 function addSpinnerToButton(button) {
   if (!button || !(button instanceof HTMLButtonElement)) return;
   button.setAttribute("data-original-content", button.innerHTML);

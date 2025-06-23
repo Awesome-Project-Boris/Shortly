@@ -74,15 +74,8 @@ $(document).ready(async function () {
 
   // action buttons
   $('#newLinkBtn').click(() => {
-    if (!userID) return createPopupWarning('Please log in to add a link');
-
-    // Reset form fields from any previous use
-    $('#createLinkForm')[0].reset();
-    $('#passwordInputContainer').hide();
-    $('#createLinkForm .is-invalid').removeClass('is-invalid');
-
-    // Show the modal
-    new bootstrap.Modal($('#createLinkModal')[0]).show();
+   // if (!userID) return createPopupWarning('Please log in to add a link');
+    window.location.href ='new_item.html'
   });
 
   $('#friendsBtn').click(() => {
