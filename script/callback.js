@@ -3,15 +3,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const code = urlParams.get("code");
   if (!code) return;
 
-  const clientId = ""; // your Cognito App Client ID
-  const clientSecret = ""; // your Cognito App Client Secret
-  const redirectUri = ""; // your registered callback URI
-  const tokenEndpoint = ""; // your Cognito token endpoint
-  const APIVariable = ""; // your API Gateway base URL
+  // Your configuration variables
+  const clientId = ""; 
+  const clientSecret = ""; 
+  const redirectUri = ""; 
+  const tokenEndpoint = ""; 
+  const APIVariable = ""; // Your API Gateway base URL
 
   const basicAuth = btoa(`${clientId}:${clientSecret}`);
 
   try {
+    // --- Step 1: Exchange Cognito code for tokens (no changes here) ---
     const response = await fetch(tokenEndpoint, {
       method: "POST",
       headers: {
@@ -37,20 +39,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     localStorage.setItem("userID", uuid);
 
-    // check admin status
-    const isAdminResp = await fetch(
-      `${APIVariable}Users/isadmin?userID=${uuid}`
-    );
+    // --- Step 2: Check admin status (MODIFIED) ---
+    // This now uses POST with a request body instead of a GET with a query string.
+    const isAdminResp = await fetch(`${APIVariable}users/is-user-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: uuid })
+    });
+    
     const isAdminBody = await isAdminResp.json();
-    localStorage.setItem(
-      "isAdmin",
-      isAdminResp.ok ? Boolean(JSON.parse(isAdminBody.body).isAdmin) : false
-    );
+    
+    // The response from the new Lambda is simpler, so we can parse it directly.
+    const isAdmin = isAdminResp.ok && isAdminBody.isAdmin === true;
+    localStorage.setItem("isAdmin", isAdmin);
 
-    // redirect into Shortly
+    // --- Step 3: Redirect into the application (no changes here) ---
     window.location.href = "index.html";
+    
   } catch (error) {
     console.error("Callback error:", error);
-    // optionally show an error popup or message here
+    // Optionally show an error message to the user on the callback page.
+    const container = document.querySelector('.spinner-container');
+    if (container) {
+        container.innerHTML = `<p class="loading-message text-danger">Login failed. Please try again.</p>`;
+    }
   }
 });

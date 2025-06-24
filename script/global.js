@@ -74,7 +74,7 @@ function buildNavBar() {
   if (!currentUserID) {
     btns.insertAdjacentHTML("beforeend", `<button id="nav-login" class="btn btn-primary">Login</button>`);
     header.querySelector("#nav-login").onclick = () => {
-      window.location.href = `${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=email+openid+phone&redirect_uri=${redirectUri}`;
+      window.location.href = `https://us-east-1zsxqwhoz7.auth.us-east-1.amazoncognito.com/login?client_id=4o8p2umpmd1i3rikvv9jct2led&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fshortly-rlt.s3.us-east-1.amazonaws.com%2Fmain%2Fcallback.html`;
     };
   } else {
     if (isAdmin) {
