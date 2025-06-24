@@ -10,55 +10,64 @@ $(document).ready(async function () {
   }
 
   $('#linksTable').bootstrapTable({
-    // data: window.MOCK_LINKS || [],                                         // Using the mock data from mockUsers.js
-    url: `${API_URL}/links/get-all-links`, // Use the actual API URL for server-side data                                    VVV
+    url: `${API_URL}/links/get-public-links`, // The URL to your new Lambda
+    method: 'get', // Use GET as this endpoint doesn't require a body
     classes: 'table-striped table-hover',
     pagination: true,
-    pageSize: 20, // A page size of 20 is more typical for client-side data
-    search: true, // Enable the in-table search
-    // Pre-fill the in-table search with the query from the global nav search
+    pageSize: 20,
+    search: true,
     searchText: globalSearchQuery,
     searchOnEnterKey: false,
     searchTimeOut: 300,
     escape: false,
+    // This handler ensures the data from the Lambda is read correctly
+    responseHandler: function(res) {
+        // The Lambda now returns the array directly in the body
+        return res;
+    },
     columns: [{
-      field: 'name',
-      title: 'Link name'
+        field: 'Name',
+        title: 'Link name'
     }, {
-      field: 'description',
-      title: 'Description'
+        field: 'Description',
+        title: 'Description'
     }, {
-      field: 'shortUrl',
-      title: 'Link',
-      formatter: (value, row) => `<a href="#">${value}</a>` // Use # for mock links
+        field: 'LinkId',
+        title: 'Link',
+        // CORRECTED: This formatter now creates a proper short link
+        formatter: (value, row) => `<a href="/${value}" target="_blank">shortly.com/${value}</a>`
     }, {
-      field: 'isProtected',
-      title: '<img src="../media/lock.png" width="16" alt="Protected">',
-      align: 'center',
-      width: 40,
-      formatter: (value) => value ? '<img src="../media/lock.png" width="16" alt="Protected">' : ''
+        // CORRECTED: The field name must match the attribute from DynamoDB
+        field: 'IsPasswordProtected',
+        title: '<img src="../media/lock.png" width="16" alt="Protected">',
+        align: 'center',
+        width: 40,
+        formatter: (value) => value ? '<img src="../media/lock.png" width="16" alt="Protected">' : ''
     }],
     onClickRow: function (row) {
-      if (String(row.ownerId) === userID) {
-        // For mock data, we can't really navigate. You might show an alert.
-        alert(`Navigating to your link: ${row.shortUrl}`);
-        return;
-      }
-      // The modal logic for non-owners remains the same
-      $('#linkAccessLabel').text(row.name);
-      $('#accessDescription').text(row.description);
-      if (row.isProtected) {
-        $('#passwordGroup').show();
-        $('#accessPassword').val('');
-      } else {
-        $('#passwordGroup').hide();
-      }
-      $('#accessError').text('');
-      window._currentShortUrl = row.shortUrl;
-      window._needsPassword = row.isProtected;
-      new bootstrap.Modal($('#linkAccessModal')[0]).show();
+        const userID = localStorage.getItem("userID");
+        
+        // Prevent action on the link itself, allow redirection only from the link text
+        if (event.target.tagName === 'A') {
+            return;
+        }
+
+        if (String(row.ownerId) === userID) {
+            // If the user owns the link, you might want to redirect them to the edit page or do nothing.
+            // For now, we'll just log it and prevent further action.
+            console.log("Owner clicked their own link row.");
+            return;
+        }
+        
+        // If the link is protected, call the handler to open the password modal
+        if (row.IsPasswordProtected) {
+            handleProtectedLinkClick(row);
+        } else {
+            // For non-protected links, redirect to the actual URL
+            window.location.href = row.String; 
+        }
     }
-  });
+});
 
   // Go→Link button
   $('#goToLinkBtn').click(function () {
