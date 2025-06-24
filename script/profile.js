@@ -1,11 +1,10 @@
 $(document).ready(async function () {
     const params = new URLSearchParams(window.location.search);
     const profileID = params.get("userID");
-    const me = localStorage.getItem("userID");
+    const me = localStorage.getItem("UserId");
     const isOwner = profileID === me;
     console.log(profileID)
     console.log(me)
-
 
     // This single API call now fetches the user's info, achievements, and links all at once.
     try {
@@ -19,21 +18,24 @@ $(document).ready(async function () {
                 LoggedInUserId: me
             })
         });
+        console.log(resp)
 
         if (!resp.ok) {
             throw new Error(`Failed to fetch profile data. Status: ${resp.status}`);
         }
 
-        const body = await resp.json();
-        // The response body from the Lambda is directly parsed.
-        const data = typeof body.body === "string" ? JSON.parse(body.body) : body.body;
 
-        // Deconstruct the response payload into its three main parts.
+        // The response body from the Lambda is directly parsed.
+        const data = await resp.json(); 
+
+        console.log("Parsed data:", data);
+
         const { userInfo, achievements, links } = data;
 
         // --- Populate Profile Header ---
         $("#userName").text(`User name: ${userInfo.Username}`);
         $("#user-name").text(`Full Name: ${userInfo.FullName}`);
+        $("#country").text(`Country: ${userInfo.Country || "Not specified"}`);
         $("#user-joined").text(
             `Date Joined: ${new Date(userInfo.DateJoined).toLocaleDateString()}`
         );
