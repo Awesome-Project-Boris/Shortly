@@ -290,7 +290,7 @@ async function runUserChecks() {
     const resp = await fetch(API + 'notif/check_unread_notifications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUserID })
+      body: JSON.stringify({ UserId: currentUserID })
     });
     const data = await resp.json();
     if (data.hasUnreadNotifications) {
