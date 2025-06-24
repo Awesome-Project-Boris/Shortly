@@ -57,7 +57,7 @@ $(document).ready(function () {
     async function loadProfile() {
         try {
             // MODIFIED: Using POST with a body instead of GET with a query string
-            const resp = await fetch(API + 'Users/byid', {
+            const resp = await fetch(API + 'users/byid', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: userID })

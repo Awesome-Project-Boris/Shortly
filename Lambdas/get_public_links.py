@@ -1,66 +1,58 @@
 import os
 import json
 import boto3
-import decimal
 from boto3.dynamodb.conditions import Attr
 
-# Initialize DynamoDB resource using IAM role or AWS creds
-
+# Initialize DynamoDB resource
 dynamodb = boto3.resource('dynamodb')
-# Table name configured via environment variable (default: 'Links')
+# Table name from environment variable
 TABLE_NAME = os.environ.get('LINKS_TABLE', 'Links')
-
-
-def _decimal_default(obj):
-    """Helper to convert DynamoDB Decimal objects to JSON-serializable types."""
-    if isinstance(obj, decimal.Decimal):
-        # Convert whole numbers to int
-        if obj % 1 == 0:
-            return int(obj)
-        # Preserve decimals as float
-        return float(obj)
-    # Let other types fail loudly
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
-
 
 def lambda_handler(event, context):
     """
-    Lambda entry point: returns all public and active links.
+    Lambda entry point: returns a projected list of public and active links.
 
     Public links: IsPrivate == False
     Active links: IsActive == True
-    Performs a table scan with both filters applied.
     """
+    
+    cors_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST' # Allow POST for body requests
+    }
+    
     table = dynamodb.Table(TABLE_NAME)
     try:
         # Scan for links that are both public and active
         response = table.scan(
+            # This expression filters for the desired items on the server side
             FilterExpression=(
                 Attr('IsPrivate').eq(False) & Attr('IsActive').eq(True)
-            )
+            ),
+            # NEW: This expression tells DynamoDB to only return these specific attributes
+            # This is highly efficient and reduces the amount of data read and transferred.
+            ProjectionExpression="LinkId, #nm, Description, IsPasswordProtected, ownerId, #str",
+            # We use ExpressionAttributeNames because 'Name' and 'String' are reserved words in DynamoDB
+            ExpressionAttributeNames={
+                "#nm": "Name",
+                "#str": "String"
+            }
         )
         links = response.get('Items', [])
-    except Exception as e:
-        # Return 500 if the scan operation fails
+        
+    except ClientError as e:
+        print(f"Error fetching links: {e}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': f'Error fetching links: {e}'})
+            'headers': cors_headers,
+            'body': json.dumps({'error': 'Error fetching links from the database.'})
         }
 
-    # Return filtered links, converting any Decimal types
+    # Return the filtered and projected list of links
     return {
         'statusCode': 200,
-        'body': json.dumps({'links': links}, default=_decimal_default)
+        'headers': cors_headers,
+        # The response body now contains a list of link objects
+        'body': json.dumps(links)
     }
-
-# Create mock event
-mock_event = {
-    "httpMethod": "GET",
-    "headers": {
-        "Content-Type": "application/json"
-    }
-}
-
-# Call lambda handler with mock event
-response = lambda_handler(None, None)
-print(response)
