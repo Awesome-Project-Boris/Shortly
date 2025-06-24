@@ -7,7 +7,7 @@ const cognitoDomain = ""; // e.g. "https://your-auth-domain.auth.us-east-1.amazo
 const clientId = ""; // your Cognito App Client ID
 const redirectUri = ""; // the exact redirect URI registered in Cognito
 
-const currentUserID = localStorage.getItem("userID");
+const currentUserID = localStorage.getItem("UserId");
 const isAdmin = localStorage.getItem("isAdmin") === "true";
 
 // --- Page Load Event ---
