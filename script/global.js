@@ -304,7 +304,7 @@ async function runUserChecks() {
   // Check if Account is Active
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const r = await fetch(API + 'Users/byid', {
+    const r = await fetch(API + 'users/is_user_banned', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })

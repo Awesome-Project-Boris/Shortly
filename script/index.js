@@ -1,6 +1,6 @@
 // index.js
 $(document).ready(async function () {
-  const userID = localStorage.getItem("userID");
+  const userID = localStorage.getItem("UserId");
   const API_URL = API; // Assuming 'API' is defined in global.js
   const site = `https://shortly-rlt.s3.us-east-1.amazonaws.com/`
 
@@ -46,7 +46,7 @@ $(document).ready(async function () {
         formatter: (value) => value ? '<img src="../media/lock.png" width="16" alt="Protected">' : ''
     }],
     onClickRow: function (row) {
-        const userID = localStorage.getItem("userID");
+        const userID = localStorage.getItem("UserId");
         
         // Prevent action on the link itself, allow redirection only from the link text
         if (event.target.tagName === 'A') {
@@ -115,7 +115,7 @@ $(document).ready(async function () {
 
   // Handle the final "Create Link" button click
   $('#submitCreateLinkBtn').click(async function () {
-    const userID = localStorage.getItem("userID");
+    const userID = localStorage.getItem("UserId");
     if (!userID) return createPopupError('You must be logged in.');
 
     const form = $('#createLinkForm')[0];
