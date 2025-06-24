@@ -56,7 +56,7 @@ function buildNavBar() {
     if (dot) dot.remove();
 
     if (currentUserID) {
-      fetch(API + 'notif/check_unread_notifications', {
+      fetch(API + 'notif/check-unread-notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserID })
@@ -306,7 +306,7 @@ async function runUserChecks() {
   // Check if Account is Active
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const r = await fetch(API + 'users/is_user_banned', {
+    const r = await fetch(API + 'users/is-user-banned', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })
