@@ -1,6 +1,6 @@
 $(document).ready(async function () {
     const params = new URLSearchParams(window.location.search);
-    const profileID = params.get("UserId");
+    const profileID = params.get("userID");
     const me = localStorage.getItem("UserId");
     const isOwner = profileID === me;
     console.log(profileID)
