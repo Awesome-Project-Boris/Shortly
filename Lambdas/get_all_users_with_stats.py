@@ -66,6 +66,7 @@ def lambda_handler(event, context):
     # Map user data
     users_data = [
         {
+            'userId': u.get('UserId', ''),
             'userName': u.get('Username', ''),
             'fullName': u.get('FullName', ''),
             'country': u.get('Country', ''),

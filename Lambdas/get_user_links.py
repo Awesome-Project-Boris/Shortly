@@ -58,7 +58,7 @@ def lambda_handler(event, context):
                 link.pop("IsPasswordProtected", None)
                 links.append(link)
 
-        return _response(200, {"data": links})
+        return _response(200, {"links": links})
 
     except Exception as e:
         return _response(500, {"message": str(e)})
@@ -70,7 +70,11 @@ def _response(status_code, body):
     '''
     return {
         "statusCode": status_code,
-        "headers": {"Content-Type": "application/json"},
+        "headers": {"Content-Type": "application/json",
+                    'Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+                    'Access-Control-Allow-Origin': "*"
+                    },
         # Use custom default handler to convert Decimal types
         "body": json.dumps(body, default=decimal_default)
     }
@@ -78,12 +82,12 @@ def _response(status_code, body):
 
 
 # Create mock event
-mock_event = {
-    "body": json.dumps({
-        "UserId": "894980c8-e8a6-4921-9bb0-f917671caa65"
-    })
-}
+# mock_event = {
+#     "body": json.dumps({
+#         "UserId": "a1"
+#     })
+# }
 
-# Call lambda handler with mock event
-response = lambda_handler(mock_event, None)
-print(response)
+# # Call lambda handler with mock event
+# response = lambda_handler(mock_event, None)
+# print(response)

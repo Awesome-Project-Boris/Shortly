@@ -16,40 +16,47 @@ async function initializeUsersTable() {
         if (!resp.ok) throw new Error(resp.statusText);
         const { users } = await resp.json();
 
-        // Destroy old table if exists
-        if ($.fn.DataTable.isDataTable("#usersTable")) {
-            $("#usersTable").DataTable().clear().destroy();
+        const $table = $("#usersTable");
+        // Reset table structure
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().clear().destroy();
         }
+        // Build table with thead and empty tbody
+        const usersThead = `<thead><tr>
+            <th>User Name</th>
+            <th>Full Name</th>
+            <th>Country</th>
+            <th>Date Joined</th>
+            <th>Total Clicks</th>
+            <th>Active</th>
+        </tr></thead>`;
+        $table.html(usersThead + "<tbody></tbody>");
 
-        const usersTable = $("#usersTable").DataTable({
+        const usersTable = $table.DataTable({
             data: users,
+            rowId: "userId",
             columns: [
-                { data: "userId", visible: false },
-                { data: "userName", title: "User Name" },
-                { data: "fullName", title: "Full Name" },
-                { data: "country", title: "Country" },
+                { data: "userName" },
+                { data: "fullName" },
+                { data: "country" },
                 {
                     data: "dateJoined",
-                    title: "Date Joined",
                     render: d => new Date(d).toLocaleDateString()
                 },
                 {
                     data: "totalClicks",
-                    title: "Total Clicks",
                     render: t => t || 0
                 },
                 {
                     data: "active",
-                    title: "Active",
                     render: a => `<input type=\"checkbox\" disabled ${a ? 'checked' : ''}/>`
                 }
             ]
         });
 
         // Row click → load links
-        $("#usersTable tbody").off("click").on("click", "tr", function () {
-            const data = usersTable.row(this).data();
-            currentUserId = data.userId;
+        $table.off("click").on("click", "tbody tr", function () {
+            currentUserId = this.id;
             renderLinksTable(currentUserId);
         });
     } catch (e) {
@@ -68,59 +75,63 @@ async function renderLinksTable(userId) {
         if (!resp.ok) throw new Error(resp.statusText);
         const { links } = await resp.json();
 
-        // Destroy old table if exists
-        if ($.fn.DataTable.isDataTable("#linksTable")) {
-            $("#linksTable").DataTable().clear().destroy();
+        const $table = $("#linksTable");
+        // Reset table structure
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().clear().destroy();
         }
+        // Build table with thead and empty tbody
+        const linksThead = `<thead><tr>
+            <th>Link Name</th>
+            <th>Description</th>
+            <th>Link</th>
+            <th>Public/Private</th>
+            <th>Has Password</th>
+            <th>Active</th>
+            <th>Action</th>
+        </tr></thead>`;
+        $table.html(linksThead + "<tbody></tbody>");
 
-        const linksTable = $("#linksTable").DataTable({
+        const linksTable = $table.DataTable({
             data: links,
+            rowId: "linkId",
             columns: [
-                { data: "linkId", visible: false },
-                { data: "linkName", title: "Link Name" },
-                { data: "description", title: "Description" },
+                { data: "linkName" },
+                { data: "description" },
                 {
                     data: "link",
-                    title: "Link",
                     render: url => `<a href=\"${url}\" target=\"_blank\">${url}</a>`
                 },
                 {
                     data: "publicPrivate",
-                    title: "Public/Private",
                     render: p => p ? "Private" : "Public"
                 },
                 {
                     data: "hasPassword",
-                    title: "Has Password",
                     render: h => h ? "Yes" : "No"
                 },
                 {
                     data: "active",
-                    title: "Active",
                     render: a => a ? "Yes" : "No"
                 },
                 {
                     data: null,
-                    title: "Action",
                     orderable: false,
-                    render: (_, __, row) => {
-                        return `<button class=\"toggle-btn\">${row.active ? 'Delete' : 'Restore'}</button>`;
-                    }
+                    render: (_, __, row) => `<button class=\"toggle-btn\">${row.active ? 'Delete' : 'Restore'}</button>`
                 }
             ]
         });
 
-        // Delete/Restore click
-        $("#linksTable tbody").off("click").on("click", ".toggle-btn", async function () {
+        // Action button click
+        $table.off("click").on("click", "tbody .toggle-btn", async function () {
             const btn = $(this);
             const rowData = linksTable.row(btn.closest("tr")).data();
-            const linkId = rowData.linkId;
             const endpoint = rowData.active ? "/links/delete" : "/links/restore";
             try {
                 await fetch(API + endpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ linkId })
+                    body: JSON.stringify({ linkId: rowData.linkId })
                 });
                 createPopup(rowData.active ? "Link deleted." : "Link restored.");
                 renderLinksTable(currentUserId);
