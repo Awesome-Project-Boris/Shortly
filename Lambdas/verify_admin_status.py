@@ -9,17 +9,14 @@ def lambda_handler(event, context):
     Expects a JSON body with:
     - userId (string): The ID of the user to check.
     """
+    body = json.loads(event.get('body', '{}'))
+    ADMIN_USER_ID = body.get('UserId')
     
-    # --- Configuration ---
-    # The Admin's User ID should be stored as an environment variable in the Lambda config
-    # for security and easy management.
-    ADMIN_USER_ID = os.environ.get('ADMIN_USER_ID')
-    
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,POST"
-    }
+    cors_headers =  {"Content-Type": "application/json",
+                    'Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+                    'Access-Control-Allow-Origin': "*"
+                    }
 
     if not ADMIN_USER_ID:
         print("CRITICAL: ADMIN_USER_ID environment variable is not set.")

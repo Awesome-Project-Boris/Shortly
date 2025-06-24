@@ -1,7 +1,7 @@
 // In Shortly/script/global.js
 
 // --- Global Configuration ---
-const API = "https://3gkpxf5218.execute-api.us-east-1.amazonaws.com/prod"; // e.g. "https://xyz.execute-api.us-east-1.amazonaws.com/prod/"
+const API = "https://3gkpxf5218.execute-api.us-east-1.amazonaws.com/prod/"; // e.g. "https://xyz.execute-api.us-east-1.amazonaws.com/prod/"
 const websiteURL = ""; // e.g. "https://yourbucket.s3.amazonaws.com"
 const cognitoDomain = ""; // e.g. "https://your-auth-domain.auth.us-east-1.amazoncognito.com"
 const clientId = ""; // your Cognito App Client ID
