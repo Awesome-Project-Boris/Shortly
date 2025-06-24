@@ -2,6 +2,7 @@
 $(document).ready(async function () {
   const userID = localStorage.getItem("userID");
   const API_URL = API; // Assuming 'API' is defined in global.js
+  const site = `https://shortly-rlt.s3.us-east-1.amazonaws.com/`
 
   const globalSearchQuery = localStorage.getItem("searchQuery") || "";
   // Clear the stored query so it doesn't affect the next page load
@@ -176,7 +177,7 @@ $(document).ready(async function () {
       Swal.fire({
         icon: 'success',
         title: 'Link Created!',
-        html: `Your new short link is: <br><a href="${result.shortUrl}" target="_blank">${result.shortUrl}</a>`,
+        html: `Your new short link is: <br><a href="${site + result.LinkId}" target="_blank">${site + result.LinkId}</a>`,
       });
 
       // Optionally, refresh the main links table to show the new link
