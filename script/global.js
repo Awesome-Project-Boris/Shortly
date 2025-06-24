@@ -56,7 +56,7 @@ function buildNavBar() {
     if (dot) dot.remove();
 
     if (currentUserID) {
-      fetch(API + 'notifications/markread', {
+      fetch(API + 'notif/check_unread_notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserID })
@@ -150,7 +150,7 @@ async function loadOffcanvasContent() {
   try {
     const [notificationsResp] = await Promise.all([
       // MODIFIED: Using POST with a body instead of GET with a query string.
-      fetch(API + 'notifications/all', {
+      fetch(API + 'notif', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserID })
@@ -223,8 +223,9 @@ function renderOtherNotifications(notifications) {
 async function respondToRequest(notificationID, accept, cardEl) {
   try {
     // This fetch call is already using POST with a body, so it's correct.
-    const resp = await fetch(`${API}Friends/respond`, {
-      method: "POST",
+    const resp = await fetch(`${API}users/respond-friend-request`, {
+      // method: "POST",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notificationID, accept }),
     });
@@ -246,8 +247,9 @@ async function loadFriendsList() {
 
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const resp = await fetch(API + "Friends/list", {
-      method: 'POST',
+    const resp = await fetch(API + "users/get-user-friends", {
+      //method: 'POST',
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })
     });
@@ -285,7 +287,7 @@ async function runUserChecks() {
   // Check for Unread Notifications
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const resp = await fetch(API + 'notifications/unread', {
+    const resp = await fetch(API + 'notif/check_unread_notifications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })
