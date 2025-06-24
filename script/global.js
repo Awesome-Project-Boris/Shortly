@@ -118,7 +118,7 @@ function buildNavBar() {
 // --- User & Session Management ---
 
 function signOff() {
-  localStorage.removeItem("userID");
+  localStorage.removeItem("UserId");
   localStorage.removeItem("isAdmin");
   window.location.href = "index.html";
 }
