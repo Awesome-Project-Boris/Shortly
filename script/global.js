@@ -249,7 +249,7 @@ async function loadFriendsList() {
     // MODIFIED: Using POST with a body instead of GET with a query string.
     const resp = await fetch(API + "users/get-user-friends", {
       //method: 'POST',
-      method: 'GET',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })
     });
@@ -313,7 +313,7 @@ async function runUserChecks() {
     });
     const data = await r.json();
     const user = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-    if (!user.isActive) {
+    if (!user.IsActive) {
       Swal.fire({
         title: "Account Deactivated",
         text: "Your account is currently inactive. Please contact an administrator.",
