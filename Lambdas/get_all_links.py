@@ -36,12 +36,22 @@ def lambda_handler(event, context):
         # Return 500 if the scan operation fails
         return {
             'statusCode': 500,
+                    "headers": {"Content-Type": "application/json",
+                    'Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+                    'Access-Control-Allow-Origin': "*"
+                    },
             'body': json.dumps({'error': f'Error fetching public links: {e}'})
         }
 
     # Return the list of public links, converting any Decimal types
     return {
         'statusCode': 200,
+                "headers": {"Content-Type": "application/json",
+                    'Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+                    'Access-Control-Allow-Origin': "*"
+                    },
         'body': json.dumps({'links': links}, default=_decimal_default)
     }
 

@@ -43,6 +43,7 @@
       <hr class="divider" />
     </div>
 
+    <!-- Users Table -->
     <div class="table-card mb-5">
       <table id="usersTable" class="table mb-0">
         <thead>
@@ -55,9 +56,17 @@
             <th>Active</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- User data will be populated by admin.js -->
-        </tbody>
+        <tbody></tbody>
+        <!-- Spinner INSIDE table, directly below thead -->
+        <tfoot>
+          <tr>
+            <td colspan="6" class="text-center p-3">
+              <div id="usersSpinner" class="spinner-border" role="status" style="display:none;">
+                <span class="visually-hidden">Loading…</span>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -71,17 +80,26 @@
       <table id="linksTable" class="table mb-0">
         <thead>
           <tr>
-            <th>Link name</th>
+            <th>Link Name</th>
             <th>Description</th>
             <th>Link</th>
             <th>Public/Private</th>
             <th>Has Password</th>
-            <th>Delete</th>
+            <th>Active</th>
+            <th>Action</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Link data will be populated by admin.js -->
-        </tbody>
+        <tbody></tbody>
+        <!-- Spinner INSIDE table -->
+        <tfoot>
+          <tr>
+            <td colspan="7" class="text-center p-3">
+              <div id="linksSpinner" class="spinner-border" role="status" style="display:none;">
+                <span class="visually-hidden">Loading…</span>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </main>
