@@ -236,7 +236,7 @@ function renderOtherNotifications(notifications) {
 async function respondToRequest(notificationID, accept, cardEl) {
   try {
     // This fetch call is already using POST with a body, so it's correct.
-    const resp = await fetch(`${API}users/respond-friend-request`, {
+    const resp = await fetch(`${API}links/respond-friend-request`, {
       // method: "POST",
       method: "PUT",
       headers: { "Content-Type": "application/json" },

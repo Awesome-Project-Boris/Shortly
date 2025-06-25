@@ -153,7 +153,6 @@ $(document).ready(() => {
         //     displayPage(1);
         //     return;
         // }
-        console.log(API_URL)
 
         try {
             // Assumes you have a 'Users/all' endpoint that returns a complete list
