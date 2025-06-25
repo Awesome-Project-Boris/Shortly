@@ -170,7 +170,8 @@ async function loadOffcanvasContent() {
     if (!notificationsResp.ok) throw new Error("Failed to fetch notifications");
 
     const data = await notificationsResp.json();
-
+    console.log("Notifications data:", data);
+    console.log("otherNotifications data:", data.otherNotifications);
     renderFriendRequests(data.friendRequests || []);
     renderOtherNotifications(data.otherNotifications || []);
 

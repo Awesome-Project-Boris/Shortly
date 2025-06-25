@@ -52,22 +52,23 @@ def lambda_handler(event, context):
         other_notifications = []
 
         for notif in notifications:
-            if notif.get("Status") == "pending":
-                # Fetch the sender's username
-                sender_id = notif.get("FromUserId")
-                try:
-                    sender = users_table.get_item(Key={"UserId": sender_id}).get("Item", {})
-                    notif["Username"] = sender.get("Username", "Unknown")
-                    notif["Picture"] = sender.get("Picture", "Unknown")
-                except Exception as e:
-                    print(f"[WARN] Failed to fetch Username for {sender_id}: {e}")
-                    notif["Username"] = "Unknown"
-                    notif["Picture"] = "Unknown"
+            if notif.get("IsRead") == 0:
+                if notif.get("Status") == "pending":
+                    # Fetch the sender's username
+                    sender_id = notif.get("FromUserId")
+                    try:
+                        sender = users_table.get_item(Key={"UserId": sender_id}).get("Item", {})
+                        notif["Username"] = sender.get("Username", "Unknown")
+                        notif["Picture"] = sender.get("Picture", "Unknown")
+                    except Exception as e:
+                        print(f"[WARN] Failed to fetch Username for {sender_id}: {e}")
+                        notif["Username"] = "Unknown"
+                        notif["Picture"] = "Unknown"
 
-                friend_requests.append(notif)
+                    friend_requests.append(notif)
 
-            elif "Status" not in notif and notif.get("Timestamp", "") > seven_days_ago_str:
-                other_notifications.append(notif)
+                elif notif.get("Timestamp", "") > seven_days_ago_str and notif.get("Status") in (None, "accepted", "rejected"):
+                    other_notifications.append(notif)
 
         return _res(200, {
             "friendRequests": friend_requests,
