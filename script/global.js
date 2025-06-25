@@ -230,7 +230,7 @@ function renderOtherNotifications(notifications) {
     const card = document.createElement("div");
     card.className = "notification-card";
     card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
-    card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
+    card.onclick = () => window.location.href = `profile.html?userID=${note.FromUserId}`;
     container.appendChild(card);
   });
 }
