@@ -3,13 +3,41 @@ $(document).ready(async function () {
   const userID = localStorage.getItem("UserId");
   const API_URL = API; // Assuming 'API' is defined in global.js
   const site = `https://shortly-rlt.s3.us-east-1.amazonaws.com`;
-  let globalRow;
 
   const globalSearchQuery = localStorage.getItem("searchQuery") || "";
   // Clear the stored query so it doesn't affect the next page load
   if (globalSearchQuery) {
     localStorage.removeItem("searchQuery");
   }
+
+  // Helper function to copy text to clipboard
+  function copyToClipboard(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', '');
+    el.style.position = 'absolute';
+    el.style.left = '-9999px';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  }
+
+  // Define event handlers for the action buttons in the table
+  window.actionEvents = {
+    'click .action-copy': function (e, value, row, index) {
+      e.stopPropagation(); // Prevent the row's click event from firing
+      const link = `${site}/main/redirect.html?code=${row.LinkId}`;
+      copyToClipboard(link);
+      createPopup('Link copied!'); // This function is from global.js
+    },
+    'click .action-open': function (e, value, row, index) {
+      e.stopPropagation(); // Prevent the row's click event from firing
+      const link = `${site}/main/redirect.html?code=${row.LinkId}`;
+      window.open(link, '_blank'); // Open link in a new tab
+    }
+  };
+
 
   $("#linksTable").bootstrapTable({
     url: `${API_URL}links/get-public-links`, // The URL to your new Lambda
@@ -39,14 +67,29 @@ $(document).ready(async function () {
       {
         field: "LinkId",
         title: "Link",
-        // CORRECTED: This formatter now creates a proper short link
         formatter: (value, row) => {
-          globalRow = row;
-          `<p>${site + "/main/redirect.html?code=" + row.LinkId}</p>`;
+          const url = `${site}/main/redirect.html?code=${row.LinkId}`;
+          const displayText = site.replace('https://', '') + '/.../' + row.LinkId;
+          return `<a href="${url}" target="_blank" title="${url}">${displayText}</a>`;
         },
       },
       {
-        // CORRECTED: The field name must match the attribute from DynamoDB
+        field: 'actions',
+        title: 'Actions',
+        align: 'center',
+        width: 160, // UPDATED: Increased width for larger buttons
+        events: window.actionEvents, // wire up the events
+        formatter: () => {
+          // This HTML will be inserted into the cell
+          return `
+            <div class="table-action-buttons">
+              <button class="btn btn-outline-secondary btn-sm me-2 action-copy" title="Copy link">Copy</button>
+              <button class="btn btn-outline-primary btn-sm action-open" title="Open link in new tab">Open</button>
+            </div>
+          `;
+        }
+      },
+      {
         field: "IsPasswordProtected",
         title: '<img src="../media/lock.png" width="16" alt="Protected">',
         align: "center",
@@ -61,7 +104,7 @@ $(document).ready(async function () {
       const userID = localStorage.getItem("UserId");
 
       // Prevent action on the link itself, allow redirection only from the link text
-      if (event.target.tagName === "A") {
+      if (event.target.tagName === "A" || event.target.closest('button')) {
         return;
       }
 
@@ -78,7 +121,7 @@ $(document).ready(async function () {
       } else {
         // For non-protected links, redirect to the actual URL
         window.location.href =
-          site + "/main/redirect.html?code=" + globalRow.linkID;
+          site + "/main/redirect.html?code=" + row.LinkId;
       }
     },
   });

@@ -176,6 +176,23 @@ body {
   border-radius: .25rem;
 }
 
+/* UPDATED: Styles for the action buttons in the table */
+.table-action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.table-action-buttons .btn-sm {
+    border-radius: 0.75rem !important; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    font-weight: 500;
+    padding: .3rem .8rem; 
+    font-size: 1.2rem;    
+    transition: all 0.2s ease;
+}
+
+
 #createLinkModal .modal-content {
     border: none;
     border-radius: 0.75rem;
