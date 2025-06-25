@@ -65,10 +65,10 @@ $(document).ready(async function () {
                 const $btn = $(this);
                 addSpinnerToButton(this);
                 try {
-                    const res = await fetch(API + "Friends/request", {
+                    const res = await fetch(API + "notif/send-friend-request", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ fromUserID: me, toUserID: profileID }),
+                        body: JSON.stringify({ FromUserId: me, ToUserId: profileID }),
                     });
                     if (!res.ok) throw new Error();
                     createPopup("Friend request sent!");
