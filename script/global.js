@@ -217,6 +217,7 @@ function renderFriendRequests(requests) {
 }
 
 function renderOtherNotifications(notifications) {
+  console.log("Rendering other notifications:", notifications);
   const container = document.getElementById("generalNotificationsContainer");
   if (!notifications || notifications.length === 0) {
     container.innerHTML = '<div class="text-muted small p-2">No new notifications.</div>';
