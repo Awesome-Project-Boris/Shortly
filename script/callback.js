@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const clientSecret = "qildkt2qu6pmdu2fuq3ea1uihhfod5cacpsqnoff3a9sgd7a5b7";
   const redirectUri = "https://shortly-rlt.s3.us-east-1.amazonaws.com/main/callback.html";
   const tokenEndpoint = "https://us-east-1ZSxqwhOZ7.auth.us-east-1.amazoncognito.com/oauth2/token";
-  const API = "https://3gkpxf5218.execute-api.us-east-1.amazonaws.com/prod/"; // Your API Gateway base URL
+  const API = "https://rhdxlt92ul.execute-api.us-east-1.amazonaws.com/prod/"; // Your API Gateway base URL
 
   const basicAuth = btoa(`${clientId}:${clientSecret}`);
 
@@ -41,10 +41,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // --- Step 2: Check admin status (MODIFIED) ---
     // This now uses POST with a request body instead of a GET with a query string.
+    console.log(`${API}users/is-user-admin`);
     const isAdminResp = await fetch(`${API}users/is-user-admin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: uuid })
+      body: JSON.stringify({ UserId: uuid })
     });
 
     const isAdminBody = await isAdminResp.json();

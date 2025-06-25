@@ -3,11 +3,11 @@ import os
 
 def lambda_handler(event, context):
     """
-    Checks if a given userId matches the site's administrator ID.
+    Checks if a given UserId matches the site's administrator ID.
     The admin ID is stored securely as an environment variable.
     
     Expects a JSON body with:
-    - userId (string): The ID of the user to check.
+    - UserId (string): The ID of the user to check.
     """
     body = json.loads(event.get('body', '{}'))
     ADMIN_USER_ID = body.get('UserId')
@@ -29,13 +29,13 @@ def lambda_handler(event, context):
         
     try:
         body = json.loads(event.get('body', '{}'))
-        user_id_to_check = body.get('userId')
+        user_id_to_check = body.get('UserId')
 
         if not user_id_to_check:
             return {
                 'statusCode': 400,
                 'headers': cors_headers,
-                'body': json.dumps({'message': 'userId is required in the request body.'})
+                'body': json.dumps({'message': 'UserId is required in the request body.'})
             }
 
         # --- Verification Logic ---
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
             'statusCode': 200,
             'headers': cors_headers,
             # Return a simple, direct JSON response
-            'body': json.dumps({'isAdmin': is_admin})
+            'body': json.dumps({'IsAdmin': is_admin})
         }
 
     except Exception as e:
