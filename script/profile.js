@@ -9,7 +9,7 @@ $(document).ready(async function () {
     // This single API call now fetches the user's info, achievements, and links all at once.
     try {
         // NOTE: The endpoint name 'Users/profile' should match the API Gateway route for your new get_user_by_id_rewritten Lambda.
-        const resp = await fetch(API + '/users/get-user-by-id', {
+        const resp = await fetch(API + 'users/get-user-by-id', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // The request body now sends both the profile owner's ID and the logged-in user's ID.
@@ -65,10 +65,10 @@ $(document).ready(async function () {
                 const $btn = $(this);
                 addSpinnerToButton(this);
                 try {
-                    const res = await fetch(API + "Friends/request", {
+                    const res = await fetch(API + "notif/send-friend-request", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ fromUserID: me, toUserID: profileID }),
+                        body: JSON.stringify({ FromUserId: me, ToUserId: profileID }),
                     });
                     if (!res.ok) throw new Error();
                     createPopup("Friend request sent!");

@@ -104,6 +104,11 @@ $(document).ready(async function () {
       const userID = localStorage.getItem("UserId");
 
       // Prevent action on the link itself, allow redirection only from the link text
+      if (event.target.tagName === 'A') {
+        return;
+      }
+
+      // Prevent action on the link itself, allow redirection only from the link text
       if (event.target.tagName === "A" || event.target.closest('button')) {
         return;
       }

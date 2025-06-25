@@ -1,79 +1,86 @@
 import json
 import boto3
 import os
+import traceback
 from datetime import datetime, timedelta, timezone
-from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key
+from decimal import Decimal
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
+# DynamoDB setup
+dynamodb = boto3.resource("dynamodb")
+notifications_table = dynamodb.Table(os.environ.get("NOTIFICATIONS_TABLE_NAME", "Notifications"))
+users_table = dynamodb.Table(os.environ.get("USERS_TABLE_NAME", "Users"))
+TOUSERID_INDEX_NAME = os.environ.get("TOUSERID_INDEX_NAME", "ToUserId-index")
 
-# Fetch table name from environment variables
-NOTIFICATIONS_TABLE_NAME = os.environ.get('NOTIFICATIONS_TABLE_NAME', 'Notifications')
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Origin": "*"
+}
+
+def _decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 def lambda_handler(event, context):
-    """
-    Fetches all relevant notifications for a user, separated into two categories:
-    1. Pending friend requests.
-    2. Other notifications (e.g., achievements) from the last 7 days.
-    
-    Expects a userId in the POST request body.
-    """
-    
-    # MODIFIED: Updated CORS headers to allow for POST requests
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,POST" 
-    }
+    if event.get("httpMethod") == "OPTIONS":
+        return {
+            "statusCode": 200,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"message": "CORS preflight OK"})
+        }
 
     try:
-        # MODIFIED: Get data from the request body instead of query string
-        body = json.loads(event.get('body', '{}'))
-        user_id = body.get('userId')
+        body = json.loads(event.get("body", "{}"))
+        user_id = body.get("userId")
 
-        # MODIFIED: Updated validation and error message
         if not user_id:
-            return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'message': 'Missing "userId" in request body.'})}
+            return _res(400, {"message": "Missing 'userId' in request body."})
 
-        table = dynamodb.Table(NOTIFICATIONS_TABLE_NAME)
-        
-        # --- Query 1: Get Pending Friend Requests ---
-        # The core logic remains the same
-        friend_requests_response = table.query(
-            IndexName='ToUserId-index',
-            KeyConditionExpression=boto3.dynamodb.conditions.Key('ToUserId').eq(user_id),
-            FilterExpression=boto3.dynamodb.conditions.Attr('Status').eq('pending')
-        )
-        friend_requests = friend_requests_response.get('Items', [])
-
-        # --- Query 2: Get Other Notifications from the last 7 days ---
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        seven_days_ago_iso = seven_days_ago.isoformat()
+        seven_days_ago_str = seven_days_ago.isoformat()
 
-        other_notifications_response = table.query(
-            IndexName='ToUserId-index',
-            KeyConditionExpression=boto3.dynamodb.conditions.Key('ToUserId').eq(user_id),
-            FilterExpression=boto3.dynamodb.conditions.Attr('Status').not_exists() & boto3.dynamodb.conditions.Attr('Timestamp').gt(seven_days_ago_iso)
+        response = notifications_table.query(
+            IndexName=TOUSERID_INDEX_NAME,
+            KeyConditionExpression=Key("ToUserId").eq(user_id)
         )
-        other_notifications = other_notifications_response.get('Items', [])
-        
-        # --- Combine results into a single response object ---
-        response_body = {
-            'friendRequests': friend_requests,
-            'otherNotifications': other_notifications
-        }
+        notifications = response.get("Items", [])
 
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps(response_body)
-        }
+        friend_requests = []
+        other_notifications = []
 
-    except ClientError as e:
-        print(f"DynamoDB ClientError: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'A database error occurred.'})}
-    except json.JSONDecodeError:
-        return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'message': 'Invalid JSON in request body.'})}
-    except Exception as e:
-        print(f"Error: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'An unexpected server error occurred.'})}
+        for notif in notifications:
+            if notif.get("Status") == "pending":
+                # Fetch the sender's username
+                sender_id = notif.get("FromUserId")
+                try:
+                    sender = users_table.get_item(Key={"UserId": sender_id}).get("Item", {})
+                    notif["Username"] = sender.get("Username", "Unknown")
+                    notif["Picture"] = sender.get("Picture", "Unknown")
+                except Exception as e:
+                    print(f"[WARN] Failed to fetch Username for {sender_id}: {e}")
+                    notif["Username"] = "Unknown"
+                    notif["Picture"] = "Unknown"
+
+                friend_requests.append(notif)
+
+            elif "Status" not in notif and notif.get("Timestamp", "") > seven_days_ago_str:
+                other_notifications.append(notif)
+
+        return _res(200, {
+            "friendRequests": friend_requests,
+            "otherNotifications": other_notifications
+        })
+
+    except Exception:
+        print("[ERROR]", traceback.format_exc())
+        return _res(500, {"message": "Unexpected server error."})
+
+def _res(status, body):
+    return {
+        "statusCode": status,
+        "headers": CORS_HEADERS,
+        "body": json.dumps(body, default=_decimal_default)
+    }

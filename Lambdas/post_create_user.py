@@ -13,8 +13,9 @@ user_table = dynamodb.Table(USER_TABLE)
 
 def lambda_handler(event, context):
     # Extract user details from the Cognito event
-    email = event['Email']  # Unique identifier for the user
     user_attributes = event['request']['userAttributes']
+    email = user_attributes.get('email')  # Unique identifier for the user
+    
     
     # Get the current timestamp for the creationDate in the desired format
     creation_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')  # Format as YYYY-MM-DDTHH:MM:SS
@@ -28,8 +29,10 @@ def lambda_handler(event, context):
         'Country': user_attributes.get('locale','Unknown'),
         'DateJoined': creation_date,  # Add the current creation date in the desired format
         'IsActive': True,
-        'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
+        #'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
+        'Picture': user_attributes.get('picture', 'https://shortly-rlt.s3.us-east-1.amazonaws.com/media/profile-photos/default-user.png'),
         'Friends': "",
+        'Email': email,
         'Links': "",
         'Notifications': "",
         'Achievements': "",
@@ -49,19 +52,3 @@ def lambda_handler(event, context):
         raise
     
     
-# Create a mock Cognito event
-# mock_event = {
-#     "Email": "post_user_test@example.com",
-#     "request": {
-#         "userAttributes": {
-#             "sub": "612345",
-#             "nickname": "testuser2",
-#             "name": "Test User",
-#             "locale": "US",
-#             "picture": "images/profile-photos/test.jpg"
-#         }
-#     }
-# }
-
-# # Call lambda handler with mock event
-# response = lambda_handler(mock_event, None)

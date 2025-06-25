@@ -24,7 +24,6 @@ function buildNavBar() {
   const header = document.querySelector("header.navbar");
   if (!header) return;
 
-  // NAVBAR HTML structure with the friend icon
   header.innerHTML = `
     <div class="container d-flex align-items-center">
       <div id="nav-friends-container" class="notification-container">
@@ -49,20 +48,10 @@ function buildNavBar() {
     }
   });
 
-  // Click handler for the Friends/Social button
+  // --- CORRECTED Click handler for the Friends/Social button ---
   header.querySelector("#nav-friends-toggle").onclick = () => {
-    const container = document.getElementById("nav-friends-container");
-    const dot = container.querySelector('.notification-dot');
-    if (dot) dot.remove();
-
-    if (currentUserID) {
-      fetch(API + 'notifications/markread', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserID })
-      }).catch(error => console.error('Error sending mark as read request:', error));
-    }
-
+    // This is now the ONLY place that opens the offcanvas.
+    // The event listener below will handle loading the content.
     const offcanvasEl = document.getElementById("friendsOffcanvas");
     const off = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
     off.toggle();
@@ -109,16 +98,36 @@ function buildNavBar() {
       </div>`);
   }
 
-  // Attach the master function to the offcanvas show event
-  const offcanvasEl = document.getElementById("friendsOffcanvas");
-  offcanvasEl.addEventListener("show.bs.offcanvas", loadOffcanvasContent);
+ const offcanvasEl = document.getElementById("friendsOffcanvas");
+  // This now handles marking notifications as read AND loading content.
+  offcanvasEl.addEventListener("show.bs.offcanvas", async () => {
+    const container = document.getElementById("nav-friends-container");
+    const dot = container.querySelector('.notification-dot');
+    if (dot) dot.remove();
+
+    if (currentUserID) {
+      // First, tell the server to mark notifications as read. We 'await' this
+      // to ensure it completes before we fetch new data.
+      try {
+        await fetch(API + 'notif/mark-as-read', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUserID })
+        });
+      } catch (error) {
+          console.error('Error sending mark as read request:', error);
+      }
+    }
+    // NOW, after the mark-as-read is done, load the content.
+    loadOffcanvasContent();
+  });
 }
 
 
 // --- User & Session Management ---
 
 function signOff() {
-  localStorage.removeItem("userID");
+  localStorage.removeItem("UserId");
   localStorage.removeItem("isAdmin");
   window.location.href = "index.html";
 }
@@ -150,7 +159,7 @@ async function loadOffcanvasContent() {
   try {
     const [notificationsResp] = await Promise.all([
       // MODIFIED: Using POST with a body instead of GET with a query string.
-      fetch(API + 'notifications/all', {
+      fetch(API + 'notif/get-user-notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserID })
@@ -181,9 +190,13 @@ function renderFriendRequests(requests) {
 
   container.innerHTML = ""; // Clear spinner
   requests.forEach(req => {
-    const fromUser = req.FromUser || {};
-    const username = fromUser.Username || 'A user';
-    const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+    console.log(req);
+    // const fromUser = req.FromUser || {};
+    // console.log("Rendering request from:", fromUser);
+    // const username = fromUser.Username || 'A user';
+    // const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+    const username = req.Username || 'A user';
+    const picture = req.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??'
 
     const card = document.createElement("div");
     card.className = "friend-request-card";
@@ -223,8 +236,9 @@ function renderOtherNotifications(notifications) {
 async function respondToRequest(notificationID, accept, cardEl) {
   try {
     // This fetch call is already using POST with a body, so it's correct.
-    const resp = await fetch(`${API}Friends/respond`, {
-      method: "POST",
+    const resp = await fetch(`${API}users/respond-friend-request`, {
+      // method: "POST",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notificationID, accept }),
     });
@@ -246,10 +260,11 @@ async function loadFriendsList() {
 
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const resp = await fetch(API + "Friends/list", {
+    const resp = await fetch(API + "users/get-user-friends", {
+      //method: 'POST',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUserID })
+      body: JSON.stringify({ UserId: currentUserID })
     });
     if (!resp.ok) throw new Error("Failed to fetch friends list");
     const data = await resp.json();
@@ -285,10 +300,10 @@ async function runUserChecks() {
   // Check for Unread Notifications
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const resp = await fetch(API + 'notifications/unread', {
+    const resp = await fetch(API + 'notif/check_unread_notifications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUserID })
+      body: JSON.stringify({ UserId: currentUserID })
     });
     const data = await resp.json();
     if (data.hasUnreadNotifications) {
@@ -304,14 +319,13 @@ async function runUserChecks() {
   // Check if Account is Active
   try {
     // MODIFIED: Using POST with a body instead of GET with a query string.
-    const r = await fetch(API + 'Users/byid', {
+    const r = await fetch(API + 'users/is-user-banned', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUserID })
     });
     const data = await r.json();
-    const user = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-    if (!user.isActive) {
+    if (!data.isActive) {
       Swal.fire({
         title: "Account Deactivated",
         text: "Your account is currently inactive. Please contact an administrator.",
