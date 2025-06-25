@@ -268,7 +268,10 @@ async function loadFriendsList() {
     });
     if (!resp.ok) throw new Error("Failed to fetch friends list");
     const data = await resp.json();
-    const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+    //const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+    console.log(data);
+    const friends = data.friends || []; // Adjust based on your API response structure
+    console.log(friends);
 
     if (!friends || friends.length === 0) {
       container.innerHTML = '<div class="text-muted small p-2">You have no friends yet.</div>';
@@ -280,9 +283,9 @@ async function loadFriendsList() {
       const card = document.createElement("div");
       card.className = "friend-card"; // This is a clickable card
       card.innerHTML = `
-                <img src="${u.picture || 'https://placehold.co/40x40/6c757d/FFFFFF?text=??'}" alt="${u.username}" class="rounded-circle" width="40" height="40"/>
-                <div class="friend-info ms-2">${u.username}</div>`;
-      card.onclick = () => window.location.href = `profile.html?userID=${u.userID}`;
+                <img src="${u.Picture || 'https://placehold.co/40x40/6c757d/FFFFFF?text=??'}" alt="${u.Username}" class="rounded-circle" width="40" height="40"/>
+                <div class="friend-info ms-2">${u.Username}</div>`;
+      card.onclick = () => window.location.href = `profile.html?userID=${u.UserId}`;
       container.appendChild(card);
     });
   } catch (e) {
