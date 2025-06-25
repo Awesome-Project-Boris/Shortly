@@ -98,16 +98,16 @@ def lambda_handler(event, context):
     }
 
 # Example test event
-# if __name__ == "__main__":
-#     test_event = {
-#         'body': json.dumps({
-#             'url': 'https://www.public.com/url/that/needs/shortening/too/3',
-#             'userId': 'Bobby Jr.2',
-#             'name': 'Admin Page Test Link',
-#             'description': 'This is a test link',
-#             'isPrivate': True,
-#             'isPasswordProtected': True,
-#             'password': 'secretpassword123'
-#         })
-#     }
-#     print(lambda_handler(test_event, None))
+if __name__ == "__main__":
+    test_event = {
+        'body': json.dumps({
+            'url': 'https://hianime.to/watch/one-piece-100',
+            'userId': 'lior1',
+            'name': 'Redirect Page Test Link',
+            'description': 'This is a test link',
+            'isPrivate': False,
+            'isPasswordProtected': False,
+            'password': ''
+        })
+    }
+    print(lambda_handler(test_event, None))

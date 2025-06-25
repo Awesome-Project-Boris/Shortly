@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting…</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 2em;
+        }
+
+        #message {
+            margin-top: 1em;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Redirecting you now…</h1>
+    <div id="message">Please wait.</div>
+    <script src="../script/global.js"></script>
+    <script>
+        (async function () {
+            // 1) grab the "code" from the path
+            // 1) grab the "code" from query string
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code') || '';
+            // 2) get userId however you like (Cognito, localStorage, etc.)
+            const userId = localStorage.getItem('userId') || 'c488f438-f011-70de-8669-54df41cc2584';
+            try {
+                const res = await fetch(
+                    API + 'links/redirect',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ "code": code, "userId": userId }),
+                        // we expect a 301 with Location → original URL
+                        redirect: 'manual'
+                    }
+                );
+                // console.log(res.status);
+                const data = await res.json();
+                console.log(data);
+                // if (res.status === 301) {
+                //     const target = res.headers.get('Location');
+                //     if (target) {
+                //         // 3) do the actual redirect
+                //         window.location.replace(target);
+                //         return;
+                //     }
+                //     throw new Error('No Location header on 301');
+                // }
+
+                // fallback if you ever switch your API to return JSON:
+                if (res.ok) {
+                    // const { Location } = await res.json();
+                    window.location.replace(data.Location);
+                    return;
+                }
+
+                // not found?
+                if (res.status === 404) {
+                    window.location.replace('error.html');
+                    return;
+                }
+
+                // other errors
+                // window.location.replace('/error.html');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('message')
+                    .textContent = 'Oops: ' + err.message;
+            }
+        })();
+    </script>
+</body>
+
+</html>

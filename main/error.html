@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>404 Not Found - Shortly</title>
+
+    <!-- Bootstrap CSS for layout and components -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous" />
+
+    <!-- Linking to your existing stylesheets for consistency -->
+    <!-- NOTE: Adjust the path if this file is not in the same root directory as index.html -->
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/indexStyles.css" />
+
+    <!-- Custom styles for the 404 page content -->
+    <style>
+        /* This style block contains CSS specific to the 404 page layout.
+      It ensures the content is centered and visually appealing.
+    */
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+        }
+
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            padding: 2rem;
+        }
+
+        .error-title {
+            font-size: 8rem;
+            font-weight: 700;
+            color: #66b2ff;
+            /* Using primary color from indexStyles.css */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
+            line-height: 1;
+        }
+
+        .error-subtitle {
+            font-size: 1.75rem;
+            font-weight: 500;
+            color: #6c757d;
+            /* Using subtitle color from indexStyles.css */
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-description {
+            font-size: 1.125rem;
+            color: #6c757d;
+            max-width: 500px;
+            margin-bottom: 2.5rem;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- 
+    The main container for the 404 error message.
+    It uses flexbox to vertically and horizontally center the content.
+  -->
+    <div class="error-container">
+        <h1 class="error-title">404</h1>
+        <h2 class="error-subtitle">Page Not Found</h2>
+        <p class="error-description">
+            Oops! The page you are looking for doesn't exist. It might have been moved or deleted.
+        </p>
+
+        <!-- 
+      This button uses the .btn and .btn-primary classes from your
+      existing stylesheet to maintain a consistent look and feel.
+    -->
+        <a href="index.html" class="btn btn-primary">Go to Homepage</a>
+    </div>
+
+    <!-- Bootstrap JS (optional for this page, but good practice to include) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

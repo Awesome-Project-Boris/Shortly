@@ -3,15 +3,15 @@ import json
 import boto3
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from botocore.exceptions import ClientError
 
 # --- DynamoDB Table Names ---
-# Best practice to use environment variables with sensible defaults.
 LINKS_TABLE_NAME = os.environ.get('LINKS_TABLE_NAME', 'Links')
 ACHIEVEMENTS_TABLE_NAME = os.environ.get('ACHIEVEMENTS_TABLE_NAME', 'Achievements')
 USER_ACHIEVEMENTS_TABLE_NAME = os.environ.get('USER_ACHIEVEMENTS_TABLE_NAME', 'UserAchievements')
 NOTIFICATIONS_TABLE_NAME = os.environ.get('NOTIFICATIONS_TABLE_NAME', 'Notifications')
-USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users') # Added Users table
+USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users')
 
 # --- Achievement Milestones ---
 ACHIEVEMENT_MILESTONES = {
@@ -27,17 +27,24 @@ links_table = dynamodb.Table(LINKS_TABLE_NAME)
 achievements_table = dynamodb.Table(ACHIEVEMENTS_TABLE_NAME)
 user_achievements_table = dynamodb.Table(USER_ACHIEVEMENTS_TABLE_NAME)
 notifications_table = dynamodb.Table(NOTIFICATIONS_TABLE_NAME)
-users_table = dynamodb.Table(USERS_TABLE_NAME) # Added Users table resource
+users_table = dynamodb.Table(USERS_TABLE_NAME)
 
 def lambda_handler(event, context):
     """
-    Handles a link click: increments count, checks for achievements, and redirects.
-    Skips incrementing if the clicker is the link owner.
+    Handles a link click: increments count atomically, checks for achievements, and redirects.
+    Expects JSON body with 'code' (link ID) and optional 'userId' (clicker ID).
     """
-    link_id = event.get('pathParameters', {}).get('code')
+    # Parse and validate body
+    try:
+        body = json.loads(event.get('body', '{}') or '{}')
+    except json.JSONDecodeError:
+        return {'statusCode': 400, 'body': json.dumps({'error': 'Malformed JSON body.'})}
+
+    link_id = body.get('code')
     if not link_id:
         return {'statusCode': 400, 'body': json.dumps({'error': 'Missing link code.'})}
-        
+
+    # Retrieve the link item
     try:
         response = links_table.get_item(Key={'LinkId': link_id})
         link_item = response.get('Item')
@@ -47,51 +54,52 @@ def lambda_handler(event, context):
         print(f"Error getting link: {e}")
         return {'statusCode': 500, 'body': json.dumps({'error': 'Could not retrieve link.'})}
 
-    clicker_user_id = event.get('queryStringParameters', {}).get('userId')
+    clicker_user_id = body.get('userId')
     link_owner_id = link_item.get('ownerId')
 
+    # Skip counting if owner clicks own link
     if link_owner_id and clicker_user_id and link_owner_id == clicker_user_id:
-        print(f"Owner '{link_owner_id}' clicked own link '{link_id}'. Skipping count increment.")
+        print(f"Owner '{link_owner_id}' clicked own link '{link_id}'. Skipping count.")
+        new_count = int(link_item.get('NumberOfClicks', 0))
     else:
-        current_click_count_str = link_item.get('NumberOfClicks', '0')
-        new_click_count = int(current_click_count_str) + 1
-        
+        # Atomically increment the click count
         try:
-            links_table.update_item(
+            update_resp = links_table.update_item(
                 Key={'LinkId': link_id},
-                UpdateExpression='SET NumberOfClicks = :new_count',
-                ConditionExpression='attribute_not_exists(NumberOfClicks) OR NumberOfClicks = :current_count',
-                ExpressionAttributeValues={
-                    ':new_count': str(new_click_count),
-                    ':current_count': current_click_count_str
-                }
+                UpdateExpression='ADD NumberOfClicks :inc',
+                ExpressionAttributeValues={':inc': Decimal(1)},
+                ReturnValues='UPDATED_NEW'
             )
-            print(f"Link '{link_id}' new click count: {new_click_count}")
-
+            new_count = int(update_resp['Attributes']['NumberOfClicks'])
+            print(f"Link '{link_id}' new click count: {new_count}")
         except ClientError as e:
-            if e.response['Error']['Code'] == "ConditionalCheckFailedException":
-                print("Race condition on click count. Refetching.")
-                response = links_table.get_item(Key={'LinkId': link_id})
-                new_click_count = int(response.get('Item', {}).get('NumberOfClicks', '0'))
-            else:
-                print(f"Error updating click count: {e}")
-                new_click_count = int(link_item.get('NumberOfClicks', '0'))
+            print(f"Error incrementing click count: {e}")
+            return {'statusCode': 500, 'body': json.dumps({'error': 'Could not update click count.'})}
 
-        if new_click_count in ACHIEVEMENT_MILESTONES:
-            achievement_id_to_unlock = ACHIEVEMENT_MILESTONES[new_click_count]
-            if link_owner_id:
-                _handle_achievement_unlock(
-                    user_id=link_owner_id,
-                    link_item=link_item,
-                    achievement_id=achievement_id_to_unlock,
-                    click_count=new_click_count
-                )
+        # Handle achievements
+        if new_count in ACHIEVEMENT_MILESTONES:
+            _handle_achievement_unlock(
+                user_id=link_owner_id,
+                link_item=link_item,
+                achievement_id=ACHIEVEMENT_MILESTONES[new_count],
+                click_count=new_count
+            )
 
+    # Perform redirect
     original_url = link_item.get('String')
     if not original_url:
-         return {'statusCode': 500, 'body': json.dumps({'error': 'Original URL not found.'})}
+        return {'statusCode': 500, 'body': json.dumps({'error': 'Original URL not found.'})}
 
-    return {'statusCode': 301, 'headers': {'Location': original_url}}
+    return {
+        'statusCode': 301,
+        'headers': {
+            'Location': original_url,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+        }
+    }
+    
 
 def _handle_achievement_unlock(user_id, link_item, achievement_id, click_count):
     """
@@ -175,3 +183,13 @@ def _update_user_achievements_list(user_id, achievement_data):
     except ClientError as e:
         print(f"Error updating user's achievements list: {e}")
 
+# Create a mock event with a link click
+# mock_event = {
+#     "body": json.dumps({
+#     "code": "lW0qxL9M",
+#     "userId": "c488f438-f011-70de-8669-54df41cc2584"
+# })
+# }
+
+# # Call the lambda handler with the mock event
+# response = lambda_handler(mock_event, None)
