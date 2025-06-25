@@ -101,26 +101,27 @@ function buildNavBar() {
  const offcanvasEl = document.getElementById("friendsOffcanvas");
   // This now handles marking notifications as read AND loading content.
   offcanvasEl.addEventListener("show.bs.offcanvas", async () => {
-    const container = document.getElementById("nav-friends-container");
-    const dot = container.querySelector('.notification-dot');
-    if (dot) dot.remove();
+    // First, we ensure the offcanvas content is loaded.
+    try {
+      await loadOffcanvasContent(); // <-- Await the async function properly
 
-    if (currentUserID) {
-      // First, tell the server to mark notifications as read. We 'await' this
-      // to ensure it completes before we fetch new data.
-      try {
+      const container = document.getElementById("nav-friends-container");
+      const dot = container.querySelector('.notification-dot');
+      if (dot) dot.remove();
+
+      if (currentUserID) {
+        // Second, we send a request to mark notifications as read.
         await fetch(API + 'notif/mark-as-read', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUserID })
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserID })
         });
-      } catch (error) {
-          console.error('Error sending mark as read request:', error);
       }
+    } catch (error) {
+      console.error('Error loading content or marking as read:', error);
     }
-    // NOW, after the mark-as-read is done, load the content.
-    loadOffcanvasContent();
   });
+
 }
 
 
@@ -226,11 +227,16 @@ function renderOtherNotifications(notifications) {
   }
 
   container.innerHTML = ""; // Clear spinner
-  notifications.forEach(note => {
+  notifications.forEach(note => {      
     const card = document.createElement("div");
     card.className = "notification-card";
     card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
-    card.onclick = () => window.location.href = `profile.html?userID=${note.FromUserId}`;
+    //card.innerHTML = `${note.LinkId}`;
+    if (note.FromUserId == null || note.FromUserId == "" || note.FromUserId.length == 0 ) {
+      card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
+    } else {
+      card.onclick = () => window.location.href = `profile.html?userID=${note.FromUserId}`;
+    }
     container.appendChild(card);
   });
 }
