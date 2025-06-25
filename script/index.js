@@ -402,7 +402,8 @@ $(document).ready(async function () {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ UserId: userID }), // Note: Your file uses 'UserId' here
-      }).then((res) => res.json());
+      }).then(res => res.json());
+      // console.log(fetchLinks);
 
       // Fetching groups as you specified
       const fetchGroups = fetch(API_URL + "users/get-users-mailing-lists", {
@@ -422,14 +423,22 @@ $(document).ready(async function () {
         fetchGroups,
         fetchFriends,
       ]);
-
+      console.log("Links:", links)
+      console.log("Groups:", groups);
+      console.log("Friends:", friends);
       // --- Populate UI with fetched data ---
 
       $shareLinkSelect
         .empty()
         .append('<option value="">-- choose link --</option>');
-      if (links && links.length > 0) {
-        links.forEach((l) => {
+
+      userLinks = links.links; 
+      console.log("links:", links);
+      console.log("User Links:", userLinks);
+      
+      if (userLinks && userLinks.length > 0) {
+        userLinks.forEach((l) => {
+          console.log("Link:", l);
           $shareLinkSelect.append(
             `<option value="${l.LinkId}">${l.Name}</option>`
           );
@@ -441,16 +450,23 @@ $(document).ready(async function () {
       }
 
       // Populate friends list using the original function
-      renderShareFriendsList(friends || []);
+      //renderShareFriendsList(friends || []);
+
+      const friendsList = Array.isArray(friends)
+        ? friends
+        : friends.friends || [];
+      
+      renderShareFriendsList(friendsList);
+
 
       // Initialize the new group selector UI
       availableGroups = groups || [];
       renderGroupDatalist(availableGroups);
 
-      const friendsList = Array.isArray(friendsResponse)
-        ? friendsResponse
-        : friendsResponse.friends || [];
-      renderShareFriendsList(friendsList);
+      // const friendsList = Array.isArray(friendsResponse)
+      //   ? friendsResponse
+      //   : friendsResponse.friends || [];
+      // renderShareFriendsList(friendsList);
     } catch (error) {
       console.error("Failed to load data for sharing:", error);
       createPopupError("Could not load your data. Please try again.");
@@ -551,7 +567,7 @@ $(document).ready(async function () {
   function renderShareFriendsList(friends) {
     // This function is unchanged from your file
     const $c = $("#shareFriendsList").empty();
-    if (!friends || friends.length === 0) {
+    if (!Array.isArray(friends) || friends.length === 0) {
       $c.append('<small class="text-muted">No friends added yet.</small>');
       return;
     }
@@ -592,17 +608,22 @@ $(document).ready(async function () {
     }
     const btn = $("#submitShareLinkBtn").get(0);
     addSpinnerToButton(btn);
+
+    console.log(linkID);
+    const body = {
+      senderId: userID,
+      linkId: linkID,
+      groupIds: shareGroupIDs,
+      friendIds: shareFriendIDs,
+      recipientsEmails: shareEmails,
+      site: window.location.origin + "/main/redirect.html?code=" + linkID, // Include the site URL for the email body
+    };
+    console.log("Sharing link with body:", body);
     try {
-      await fetch(API_URL + "/links/share", {
+      await fetch(API_URL + "mail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          senderId: userID,
-          linkId: linkID,
-          groupIds: shareGroupIDs,
-          friendIds: shareFriendIDs,
-          recipientsEmails: shareEmails,
-        }),
+        body: JSON.stringify(body),
       });
       createPopup("Link shared!");
       shareModal.hide();
