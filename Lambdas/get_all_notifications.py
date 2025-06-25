@@ -2,86 +2,68 @@ import json
 import boto3
 import os
 from datetime import datetime, timedelta, timezone
-from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key  # <-- Required for GSI queries
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
+# DynamoDB table and index
+dynamodb = boto3.resource("dynamodb")
+notifications_table = dynamodb.Table(os.environ.get("NOTIFICATIONS_TABLE_NAME", "Notifications"))
+TOUSERID_INDEX_NAME = os.environ.get("TOUSERID_INDEX_NAME", "ToUserId-index")
 
-# Fetch table name from environment variables
-NOTIFICATIONS_TABLE_NAME = os.environ.get('NOTIFICATIONS_TABLE_NAME', 'Notifications')
-# It's also good practice to make the index name an environment variable
-USER_ID_INDEX_NAME = os.environ.get('USER_ID_INDEX_NAME', 'ToUserId-index')
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Origin": "*"
+}
 
 def lambda_handler(event, context):
-    """
-    Fetches all relevant notifications for a user, separated into two categories:
-    1. Pending friend requests.
-    2. Other notifications (e.g., achievements) from the last 7 days.
-    """
-    
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,POST" 
-    }
-
-    # Handle CORS pre-flight OPTIONS request
-    if event.get('httpMethod') == 'OPTIONS':
+    if event.get("httpMethod") == "OPTIONS":
         return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'CORS pre-flight check successful.'})
+            "statusCode": 200,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"message": "CORS preflight OK"})
         }
 
     try:
-        body = json.loads(event.get('body', '{}'))
-        user_id = body.get('userId')
+        body = json.loads(event.get("body", "{}"))
+        user_id = body.get("userId")
 
         if not user_id:
-            return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'message': 'Missing "userId" in request body.'})}
+            return _res(400, {"message": "Missing 'userId' in request body."})
 
-        table = dynamodb.Table(NOTIFICATIONS_TABLE_NAME)
-        
-        # --- Query 1: Get Pending Friend Requests ---
-        friend_requests_response = table.query(
-            IndexName=USER_ID_INDEX_NAME,
-            KeyConditionExpression=boto3.dynamodb.conditions.Key('ToUserId').eq(user_id),
-            FilterExpression=boto3.dynamodb.conditions.Attr('Status').eq('pending')
-        )
-        friend_requests = friend_requests_response.get('Items', [])
-
-        # --- Query 2: Get Other Notifications from the last 7 days ---
+        # ISO timestamp for filtering recent notifications
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        seven_days_ago_iso = seven_days_ago.isoformat()
+        seven_days_ago_str = seven_days_ago.isoformat()
 
-        other_notifications_response = table.query(
-            IndexName=USER_ID_INDEX_NAME,
-            KeyConditionExpression=boto3.dynamodb.conditions.Key('ToUserId').eq(user_id),
-            FilterExpression=boto3.dynamodb.conditions.Attr('Status').not_exists() & boto3.dynamodb.conditions.Attr('Timestamp').gt(seven_days_ago_iso)
+        # Query the GSI for notifications
+        response = notifications_table.query(
+            IndexName=TOUSERID_INDEX_NAME,
+            KeyConditionExpression=Key("ToUserId").eq(user_id)
         )
-        other_notifications = other_notifications_response.get('Items', [])
-        
-        response_body = {
-            'friendRequests': friend_requests,
-            'otherNotifications': other_notifications
-        }
+        notifications = response.get("Items", [])
 
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps(response_body)
-        }
+        # Filter notifications
+        friend_requests = []
+        other_notifications = []
 
-    except ClientError as e:
-        # NEW: Specific check for a missing index
-        if e.response['Error']['Code'] == 'ResourceNotFoundException':
-            error_msg = f"DynamoDB Index '{USER_ID_INDEX_NAME}' not found. Please create the GSI on the '{NOTIFICATIONS_TABLE_NAME}' table."
-            print(f"ERROR: {error_msg}")
-            return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'Server configuration error.'})}
-        
-        print(f"DynamoDB ClientError: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'A database error occurred.'})}
+        for notif in notifications:
+            if notif.get("Status") == "pending":
+                friend_requests.append(notif)
+            elif "Status" not in notif and notif.get("Timestamp", "") > seven_days_ago_str:
+                other_notifications.append(notif)
+
+        return _res(200, {
+            "friendRequests": friend_requests,
+            "otherNotifications": other_notifications
+        })
+
     except Exception as e:
-        print(f"Error: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'An unexpected server error occurred.'})}
+        print("[ERROR]", str(e))
+        return _res(500, {"message": "Unexpected server error."})
 
+def _res(status, body):
+    return {
+        "statusCode": status,
+        "headers": CORS_HEADERS,
+        "body": json.dumps(body)
+    }
