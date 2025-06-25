@@ -190,9 +190,13 @@ function renderFriendRequests(requests) {
 
   container.innerHTML = ""; // Clear spinner
   requests.forEach(req => {
-    const fromUser = req.FromUser || {};
-    const username = fromUser.Username || 'A user';
-    const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+    console.log(req);
+    // const fromUser = req.FromUser || {};
+    // console.log("Rendering request from:", fromUser);
+    // const username = fromUser.Username || 'A user';
+    // const picture = fromUser.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??';
+    const username = req.Username || 'A user';
+    const picture = req.Picture || 'https://placehold.co/40x40/007bff/FFFFFF?text=??'
 
     const card = document.createElement("div");
     card.className = "friend-request-card";
