@@ -1,40 +1,53 @@
 /* new_item.css */
 
-/* CARD WRAPPER – reuse the “table-card” style */
 .form-card {
   max-width: 600px;
-  margin: 0 auto;
+  margin: 2rem auto;
   background: #fff;
-  border-radius: 0.5rem;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* HIDE password row until needed */
-.password-group {
-  display: none;
+.form-title {
+  font-weight: 600;
 }
 
-/* ERROR MESSAGES */
-.error-message {
-  color: #dc3545;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-/* Tweak form-label spacing */
-.form-label {
+.new-item-form .form-label {
   font-weight: 500;
+  color: #495057;
 }
 
-/* Real-time valid/invalid borders */
-.form-control.is-valid {
-  border-color: #198754 !important; /* Bootstrap success green */
-  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+.new-item-form .form-control {
+  font-size: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border-color: #ced4da;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-.form-control.is-invalid {
-  border-color: #dc3545 !important; /* Bootstrap danger red */
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+
+.new-item-form .form-control:focus {
+  border-color: #66b2ff;
+  box-shadow: 0 0 0 0.2rem rgba(102, 178, 255, 0.25);
+}
+
+.new-item-form .form-check-input {
+  width: 3em;
+  height: 1.5em;
+  cursor: pointer;
+}
+
+.new-item-form .form-check-label {
+  cursor: pointer;
+  padding-left: 0.5rem;
+}
+
+/* Validation styling */
+.new-item-form .form-control.is-invalid {
+  border-color: #dc3545 !important;
+}
+.new-item-form .invalid-feedback {
+  font-weight: 500;
 }
 
 /* Character counter styling */
@@ -42,8 +55,3 @@
   font-size: 0.875rem;
   color: #6c757d;
 }
-.counter.exceeded {
-  color: #dc3545 !important;
-}
-
-/* Keep existing rules for error-message etc. */

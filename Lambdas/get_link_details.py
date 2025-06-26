@@ -3,40 +3,59 @@ import boto3
 import os
 from collections import Counter
 from botocore.exceptions import ClientError
+import decimal
 
 # Initialize DynamoDB resource
 dynamodb = boto3.resource('dynamodb')
 
 # Use environment variables for table names
 LINKS_TABLE_NAME = os.environ.get('LINKS_TABLE_NAME', 'Links')
-LINK_CLICKS_TABLE_NAME = os.environ.get('LINK_CLICKS_TABLE_NAME', 'LinkClicks') # Assumed table for analytics
+LINK_CLICKS_TABLE_NAME = os.environ.get('LINK_CLICKS_TABLE_NAME', 'LinkClicks')
+
+# Helper for JSON serialization of DynamoDB's Decimal type
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return int(o) if o % 1 == 0 else float(o)
+        return super(DecimalEncoder, self).default(o)
+
+def _make_response(status_code, body):
+    """
+    Centralized function to create API responses with full CORS headers.
+    """
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST'
+        },
+        'body': json.dumps(body, cls=DecimalEncoder)
+    }
 
 def lambda_handler(event, context):
     """
     Fetches comprehensive details for a given link, including its properties
     and aggregated click statistics by country.
-
-    Expects a JSON body with 'linkId'.
     """
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,POST"
-    }
+    
+    # Handle CORS preflight request
+    if event.get('httpMethod') == 'OPTIONS':
+        return _make_response(204, {})
 
     try:
         body = json.loads(event.get('body', '{}'))
         link_id = body.get('linkId')
 
         if not link_id:
-            return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'message': 'Missing "linkId" in request body.'})}
+            return _make_response(400, {'message': 'Missing "linkId" in request body.'})
 
         links_table = dynamodb.Table(LINKS_TABLE_NAME)
         
         # --- Step 1: Get the main link data ---
         link_response = links_table.get_item(Key={'LinkId': link_id})
         if 'Item' not in link_response:
-            return {'statusCode': 404, 'headers': cors_headers, 'body': json.dumps({'message': 'Link not found.'})}
+            return _make_response(404, {'message': 'Link not found.'})
         
         link_details = link_response['Item']
         
@@ -60,7 +79,6 @@ def lambda_handler(event, context):
             clicks_by_country = {}
 
         # --- Step 3: Combine all data into a single response ---
-        # Convert Decimal types from DynamoDB to standard Python types for JSON serialization
         response_body = {
             'IsPrivate': bool(link_details.get('IsPrivate', False)),
             'IsPasswordProtected': bool(link_details.get('IsPasswordProtected', False)),
@@ -69,12 +87,9 @@ def lambda_handler(event, context):
             'clicksByCountry': dict(clicks_by_country) # Convert Counter to a regular dict
         }
 
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps(response_body)
-        }
+        return _make_response(200, response_body)
 
     except Exception as e:
         print(f"Error: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'An unexpected server error occurred.'})}
+        return _make_response(500, {'message': 'An unexpected server error occurred.'})
+

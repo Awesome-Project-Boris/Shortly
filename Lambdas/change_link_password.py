@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         # Load the request body from the event
         body = json.loads(event.get('body', '{}'))
         
-        link_id = body.get('linkId')
+        link_id = body.get('LinkId')
         user_id = body.get('userId')
         current_password = body.get('currentPassword')
         new_password = body.get('newPassword')
