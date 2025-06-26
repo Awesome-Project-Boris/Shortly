@@ -3,67 +3,69 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 
-# Initialize the S3 client
-s3_client = boto3.client('s3')
+# --- Initialize AWS Clients ---
+dynamodb = boto3.resource('dynamodb')
+
+# --- Environment Variables ---
+USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users')
+users_table = dynamodb.Table(USERS_TABLE_NAME)
+
+def _make_response(status_code, body):
+    """
+    Centralized function to create API responses with full CORS headers.
+    """
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST'
+        },
+        'body': json.dumps(body)
+    }
 
 def lambda_handler(event, context):
     """
-    Deletes an object from an S3 bucket.
-    This is used as a rollback mechanism if a profile update fails after
-    an image has already been uploaded.
-
-    Expects a JSON body with:
-    - key (string): The key (filename) of the object to delete.
+    Reverts a user's profile picture to a default image in DynamoDB.
+    This function no longer deletes objects from S3.
+    It now accepts a 'pictureUrl' in the body.
     """
-
-    # --- Configuration ---
-    bucket_name = os.environ.get('UPLOAD_BUCKET_NAME')
-    if not bucket_name:
-        raise ValueError("UPLOAD_BUCKET_NAME environment variable is not set.")
-
-    # CORS headers for the response
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,DELETE"
-    }
+    # --- CORS Preflight Handling ---
+    if event.get('httpMethod') == 'OPTIONS':
+        return _make_response(204, {})
 
     try:
-        # Load the key from the request body
+        # Load the userId and optional pictureUrl from the request body
         body = json.loads(event.get('body', '{}'))
-        key_to_delete = body.get('key')
+        user_id = body.get('userId')
+        picture_url = body.get('pictureUrl')
 
-        if not key_to_delete:
-            return {
-                'statusCode': 400,
-                'headers': cors_headers,
-                'body': json.dumps({'message': 'Missing "key" in request body.'})
-            }
+        if not user_id:
+            return _make_response(400, {'message': 'Request must include "userId".'})
 
-        # Delete the object from the S3 bucket
-        s3_client.delete_object(
-            Bucket=bucket_name,
-            Key=key_to_delete
+        # Use the provided pictureUrl, or a fallback placeholder if it's not provided.
+        final_picture_url = picture_url if picture_url else "https://placehold.co/150x150/6c757d/FFFFFF?text=Avatar"
+
+        # --- Perform the DynamoDB Update ---
+        print(f"Attempting to reset picture for user: {user_id} to URL: {final_picture_url}")
+        users_table.update_item(
+            Key={'UserId': user_id},
+            UpdateExpression="SET Picture = :p",
+            ExpressionAttributeValues={':p': final_picture_url},
+            ConditionExpression="attribute_exists(UserId)" # Ensure the user exists
         )
 
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps({'message': f"Object '{key_to_delete}' deleted successfully."})
-        }
+        return _make_response(200, {'message': 'Profile picture reset successfully.'})
 
     except ClientError as e:
-        print(f"Boto3 ClientError: {e}")
-        return {
-            'statusCode': 500,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'An error occurred during S3 object deletion.'})
-        }
+        if e.response['Error']['Code'] == "ConditionalCheckFailedException":
+            return _make_response(404, {'message': f"User with ID '{user_id}' not found."})
+        print(f"DynamoDB Error: {e.response['Error']['Message']}")
+        return _make_response(500, {'message': 'A database error occurred.'})
+    
+    except (json.JSONDecodeError, TypeError):
+        return _make_response(400, {'message': 'Invalid JSON format in request body.'})
 
     except Exception as e:
         print(f"Error: {e}")
-        return {
-            'statusCode': 500,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'An unexpected server error occurred.'})
-        }
+        return _make_response(500, {'message': 'An unexpected server error occurred.'})

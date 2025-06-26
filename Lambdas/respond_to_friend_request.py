@@ -68,7 +68,7 @@ def lambda_handler(event, context):
                 "FromUserId": to_user,
                 "ToUserId": from_user,
                 "Status": "accepted" if accept else "rejected",
-                "IsRead": 0,
+                "IsRead": 1,
                 "Text": f"{to_data.get('Username', 'Someone')} {'accepted' if accept else 'rejected'} your friend request.",
                 "LinkId": "",
                 "Timestamp": datetime.utcnow().isoformat()

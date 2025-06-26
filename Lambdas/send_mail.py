@@ -129,21 +129,3 @@ def lambda_handler(event, context):
         return _response(207, {'message': 'Some emails failed to send.', 'errors': send_errors})
         
     return _response(200, {'message': f'Email sent successfully to {len(final_recipients)} unique recipient(s).'})
-
-
-# Create mock event
-mock_event = {
-    "httpMethod": "POST",
-    "body": json.dumps({
-        "senderId": "user123",
-        "linkId": "link456", 
-        "groupIds": ["group1", "group2"],
-        "friendIds": ["friend1", "friend2"],
-        "recipientsEmails": ["roishm83@gmail.com", ],
-        "site": "https://shortly.com/link456"
-    })
-}
-
-# Call lambda handler with mock event
-response = lambda_handler(mock_event, None)
-print(response)

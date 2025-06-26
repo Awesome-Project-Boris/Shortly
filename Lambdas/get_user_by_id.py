@@ -48,7 +48,7 @@ def lambda_handler(event, context):
             return _make_response(404, {'error': 'User not found.'})
 
         achievements = _get_user_achievements(profile_owner_id)
-        # This function will now fetch only active links
+        # This function now fetches all links and then filters them in Python
         links = _get_user_links_with_gsi(profile_owner_id)
 
     except ClientError as e:
@@ -57,7 +57,7 @@ def lambda_handler(event, context):
 
     is_owner_viewing = profile_owner_id == logged_in_user_id
     if not is_owner_viewing:
-        # This privacy filter is now applied to the list of *active* links
+        # This privacy filter is applied after the active filter
         links = [link for link in links if not link.get('IsPrivate', False)]
 
     response_payload = {
@@ -109,26 +109,34 @@ def _get_user_achievements(user_id):
 
 def _get_user_links_with_gsi(user_id):
     """
-    MODIFIED: Queries the Links table's GSI and filters to return only active links.
+    MODIFIED: Queries the Links table's GSI to get all of a user's links,
+    and then filters them in Python to return only the active ones.
     """
-    results = []
+    all_user_links = []
     
-    # This FilterExpression ensures we only get items where 'IsActive' is true.
-    # We also include items where the attribute doesn't exist, for backward compatibility.
-    filter_expression = Attr('IsActive').eq(True) | Attr('IsActive').not_exists()
-    
-    # Using a paginator is a more efficient way to handle queries that might return many items.
-    paginator = links_table.get_paginator('query')
-    pages = paginator.paginate(
+    # First, query DynamoDB to get all links for the user, same as before
+    response = links_table.query(
         IndexName=LINKS_USERID_GSI_NAME,
-        KeyConditionExpression=Key('UserId').eq(user_id),
-        FilterExpression=filter_expression
+        KeyConditionExpression=Key('UserId').eq(user_id)
     )
-    
-    for page in pages:
-        results.extend(page.get('Items', []))
+    all_user_links.extend(response.get('Items', []))
 
-    return results
+    # Handle pagination to get all results
+    while 'LastEvaluatedKey' in response:
+        response = links_table.query(
+            IndexName=LINKS_USERID_GSI_NAME,
+            KeyConditionExpression=Key('UserId').eq(user_id),
+            ExclusiveStartKey=response['LastEvaluatedKey']
+        )
+        all_user_links.extend(response.get('Items', []))
+
+    # Second, filter the results in Python. This is safer.
+    # A link is considered active if IsActive is True, or if the attribute doesn't exist at all.
+    active_links = [
+        link for link in all_user_links if link.get('IsActive', True)
+    ]
+
+    return active_links
 
 
 def _make_response(status_code, body):
