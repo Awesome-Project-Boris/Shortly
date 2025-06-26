@@ -39,12 +39,13 @@ function buildNavBar() {
   // Attach event handlers
   header.querySelector("#nav-home").onclick = () => window.location.href = "index.html";
 
+  // MODIFIED: Event listener for the search bar
   header.querySelector("#nav-search").addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const q = e.target.value.trim().toLowerCase();
-      localStorage.setItem("searchQuery", q);
-      window.location.href = "index.html";
+      // Redirect to the index page with the search term as a query string parameter
+      window.location.href = `index.html?q=${encodeURIComponent(q)}`;
     }
   });
 
@@ -98,7 +99,7 @@ function buildNavBar() {
       </div>`);
   }
 
- const offcanvasEl = document.getElementById("friendsOffcanvas");
+  const offcanvasEl = document.getElementById("friendsOffcanvas");
   // This now handles marking notifications as read AND loading content.
   offcanvasEl.addEventListener("show.bs.offcanvas", async () => {
     // First, we ensure the offcanvas content is loaded.
@@ -227,12 +228,12 @@ function renderOtherNotifications(notifications) {
   }
 
   container.innerHTML = ""; // Clear spinner
-  notifications.forEach(note => {      
+  notifications.forEach(note => {
     const card = document.createElement("div");
     card.className = "notification-card";
     card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
     //card.innerHTML = `${note.LinkId}`;
-    if (note.FromUserId == null || note.FromUserId == "" || note.FromUserId.length == 0 ) {
+    if (note.FromUserId == null || note.FromUserId == "" || note.FromUserId.length == 0) {
       card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
     } else {
       card.onclick = () => window.location.href = `profile.html?userID=${note.FromUserId}`;

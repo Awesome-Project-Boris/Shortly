@@ -4,11 +4,9 @@ $(document).ready(async function () {
   const API_URL = API; // Assuming 'API' is defined in global.js
   const site = `https://shortly-rlt.s3.us-east-1.amazonaws.com`;
 
-  const globalSearchQuery = localStorage.getItem("searchQuery") || "";
-  // Clear the stored query so it doesn't affect the next page load
-  if (globalSearchQuery) {
-    localStorage.removeItem("searchQuery");
-  }
+  // MODIFIED: Read the search query from the URL querystring instead of localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const globalSearchQuery = urlParams.get('q') || "";
 
   // Helper function to copy text to clipboard
   function copyToClipboard(text) {
@@ -45,7 +43,7 @@ $(document).ready(async function () {
     pagination: true,
     pageSize: 20,
     search: true,
-    searchText: globalSearchQuery,
+    searchText: globalSearchQuery, // MODIFIED: Use the query from the URL
     searchOnEnterKey: false,
     searchTimeOut: 300,
     escape: false,
@@ -229,9 +227,8 @@ $(document).ready(async function () {
       Swal.fire({
         icon: "success",
         title: "Link Created!",
-        html: `Your new short link is: <br><a href="${
-          site + result.LinkId
-        }" target="_blank">${site + result.LinkId}</a>`,
+        html: `Your new short link is: <br><a href="${site + result.LinkId
+          }" target="_blank">${site + result.LinkId}</a>`,
       });
 
       // Optionally, refresh the main links table to show the new link
