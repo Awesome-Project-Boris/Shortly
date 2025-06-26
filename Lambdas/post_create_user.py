@@ -29,7 +29,8 @@ def lambda_handler(event, context):
         'Country': user_attributes.get('locale','Unknown'),
         'DateJoined': creation_date,  # Add the current creation date in the desired format
         'IsActive': True,
-        'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
+        #'Picture': user_attributes.get('picture', 'images/profile-photos/default-user.png'),
+        'Picture': user_attributes.get('picture', 'https://shortly-rlt.s3.us-east-1.amazonaws.com/media/profile-photos/default-user.png'),
         'Friends': "",
         'Email': email,
         'Links': "",

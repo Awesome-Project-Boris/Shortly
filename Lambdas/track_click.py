@@ -3,6 +3,7 @@ import json
 import boto3
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from botocore.exceptions import ClientError
 from decimal import Decimal
 
@@ -89,14 +90,16 @@ def lambda_handler(event, context):
     # Default to current click count in case the owner clicks their own link
     new_click_count = int(link_item.get('NumberOfClicks', 0))
 
+    # Skip counting if owner clicks own link
     if link_owner_id and clicker_user_id and link_owner_id == clicker_user_id:
-        print(f"Owner '{link_owner_id}' clicked own link '{link_id}'. Skipping count increment.")
+        print(f"Owner '{link_owner_id}' clicked own link '{link_id}'. Skipping count.")
+        new_count = int(link_item.get('NumberOfClicks', 0))
     else:
         current_click_count = int(link_item.get('NumberOfClicks', 0))
         new_click_count = current_click_count + 1
         
         try:
-            links_table.update_item(
+            update_resp = links_table.update_item(
                 Key={'LinkId': link_id},
                 UpdateExpression='SET NumberOfClicks = :new_count',
                 ConditionExpression='attribute_not_exists(NumberOfClicks) OR NumberOfClicks = :current_count',

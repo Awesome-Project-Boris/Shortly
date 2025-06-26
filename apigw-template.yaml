@@ -1,0 +1,2147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for API Gateway API: ShortlyAPI. Generated on
+  2025-06-24T15:59:21.945567+00:00'
+Parameters: {}
+Resources:
+  Shortlyapirestapi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ShortlyAPI
+      EndpointConfiguration:
+        Types:
+        - REGIONAL
+  ShortlyapiOptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiImagesresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: images
+  ShortlyapiImagesoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiImagesresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiImagesDeleteImageresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiImagesresource
+      PathPart: delete_image
+  ShortlyapiImagesDeleteImagedeletemethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiImagesDeleteImageresource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:delete_image/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiImagesDeleteImageoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiImagesDeleteImageresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''DELETE,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: links
+  ShortlyapiLinksdeletemethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksresource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:delete_link/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''DELETE,OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinkspostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:new_short_url/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksChangeLinkPasswordresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: change_link_password
+  ShortlyapiLinksChangeLinkPasswordoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksChangeLinkPasswordresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksChangeLinkPasswordputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksChangeLinkPasswordresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:change_link_password/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksGetActiveLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: get-active-links
+  ShortlyapiLinksGetActiveLinksgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetActiveLinksresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_all_active_links/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksGetActiveLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetActiveLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksGetAllLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: get-all-links
+  ShortlyapiLinksGetAllLinksgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetAllLinksresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_all_links/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksGetAllLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetAllLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksGetLinkDetailsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: get-link-details
+  ShortlyapiLinksGetLinkDetailsgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetLinkDetailsresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_link_details/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksGetLinkDetailsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetLinkDetailsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksGetPublicLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: get-public-links
+  ShortlyapiLinksGetPublicLinksgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetPublicLinksresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_public_links/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksGetPublicLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksGetPublicLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksRespondFriendRequestresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: respond-friend-request
+  ShortlyapiLinksRespondFriendRequestoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksRespondFriendRequestresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksRespondFriendRequestputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksRespondFriendRequestresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:respond_to_friend_request/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksRestoreLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: restore-links
+  ShortlyapiLinksRestoreLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksRestoreLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksRestoreLinkspostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksRestoreLinksresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:restore_link/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksToggleLinkPrivacyresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: toggle_link_privacy
+  ShortlyapiLinksToggleLinkPrivacyoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksToggleLinkPrivacyresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiLinksToggleLinkPrivacyputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksToggleLinkPrivacyresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:toggle_link_privacy/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksVerifyLinkPasswordresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiLinksresource
+      PathPart: verify-link-password
+  ShortlyapiLinksVerifyLinkPasswordgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksVerifyLinkPasswordresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:verify_link_password/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiLinksVerifyLinkPasswordoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiLinksVerifyLinkPasswordresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiMailresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: mail
+  ShortlyapiMailoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiMailresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiMailpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiMailresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:send_mail/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiMailingListresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: mailing_list
+  ShortlyapiMailingListoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiMailingListresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiMailingListpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiMailingListresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create_mailing_list/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiNotifresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: notif
+  ShortlyapiNotifgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_all_notifications/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiNotifoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiNotifpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:new_notif/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiNotifCheckUnreadNotificationsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiNotifresource
+      PathPart: check_unread_notifications
+  ShortlyapiNotifCheckUnreadNotificationsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifCheckUnreadNotificationsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiNotifCheckUnreadNotificationspostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifCheckUnreadNotificationsresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:check_unread_notifications/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiNotifMarkAsReadresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiNotifresource
+      PathPart: mark-as-read
+  ShortlyapiNotifMarkAsReadoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifMarkAsReadresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiNotifMarkAsReadputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifMarkAsReadresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:mark_notifications_as_read/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiNotifSendFriendRequestresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiNotifresource
+      PathPart: send-friend-request
+  ShortlyapiNotifSendFriendRequestoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifSendFriendRequestresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiNotifSendFriendRequestpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiNotifSendFriendRequestresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:send_friend_request/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUserAchresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: user_ach
+  ShortlyapiUserAchoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUserAchresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Fn::GetAtt:
+        - Shortlyapirestapi
+        - RootResourceId
+      PathPart: users
+  ShortlyapiUsersoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:update_user_profile/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersBanUserresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: ban-user
+  ShortlyapiUsersBanUseroptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersBanUserresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,PUT,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersBanUserputmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersBanUserresource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ban_user/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetActiveFriendsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-active-friends
+  ShortlyapiUsersGetActiveFriendsgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetActiveFriendsresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_active_friends/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetActiveFriendsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetActiveFriendsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetAllUsersWithStatsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-all-users-with-stats
+  ShortlyapiUsersGetAllUsersWithStatsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetAllUsersWithStatsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetAllUsersWithStatspostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetAllUsersWithStatsresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_all_users_with_stats/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetUserByIdresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-user-by-id
+  ShortlyapiUsersGetUserByIdoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserByIdresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetUserByIdpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserByIdresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_user_by_id/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetUserFriendsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-user-friends
+  ShortlyapiUsersGetUserFriendsgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserFriendsresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_user_friends/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetUserFriendsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserFriendsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetUserLinksresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-user-links
+  ShortlyapiUsersGetUserLinksoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserLinksresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetUserLinkspostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUserLinksresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_user_links/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetUsersMailingListsresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get-users-mailing-lists
+  ShortlyapiUsersGetUsersMailingListsgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUsersMailingListsresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get-user-mailing-lists/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetUsersMailingListsoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetUsersMailingListsresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersGetAllActiveUsersresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: get_all_active_users
+  ShortlyapiUsersGetAllActiveUsersgetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetAllActiveUsersresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_all_active_users/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersGetAllActiveUsersoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersGetAllActiveUsersresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersIsUserAdminresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: is-user-admin
+  ShortlyapiUsersIsUserAdmingetmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersIsUserAdminresource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:verify_admin_status/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  ShortlyapiUsersIsUserAdminoptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersIsUserAdminresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,OPTIONS,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersPostCreateUserresource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ParentId:
+        Ref: ShortlyapiUsersresource
+      PathPart: post-create-user
+  ShortlyapiUsersPostCreateUseroptionsmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersPostCreateUserresource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST,OPTIONS'''
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates:
+            application/json: ''
+  ShortlyapiUsersPostCreateUserpostmethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+      ResourceId:
+        Ref: ShortlyapiUsersPostCreateUserresource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      RequestParameters: {}
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: false
+      Integration:
+        Type: AWS_PROXY
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:post_create_user_with_body/invocations
+        IntegrationHttpMethod: POST
+        Credentials:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/LabRole
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+          ResponseTemplates: {}
+  Shortlyapideployment20250624155921:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+    - ShortlyapiImagesDeleteImagedeletemethod
+    - ShortlyapiImagesDeleteImageoptionsmethod
+    - ShortlyapiImagesoptionsmethod
+    - ShortlyapiLinksChangeLinkPasswordoptionsmethod
+    - ShortlyapiLinksChangeLinkPasswordputmethod
+    - ShortlyapiLinksGetActiveLinksgetmethod
+    - ShortlyapiLinksGetActiveLinksoptionsmethod
+    - ShortlyapiLinksGetAllLinksgetmethod
+    - ShortlyapiLinksGetAllLinksoptionsmethod
+    - ShortlyapiLinksGetLinkDetailsgetmethod
+    - ShortlyapiLinksGetLinkDetailsoptionsmethod
+    - ShortlyapiLinksGetPublicLinksgetmethod
+    - ShortlyapiLinksGetPublicLinksoptionsmethod
+    - ShortlyapiLinksRespondFriendRequestoptionsmethod
+    - ShortlyapiLinksRespondFriendRequestputmethod
+    - ShortlyapiLinksRestoreLinksoptionsmethod
+    - ShortlyapiLinksRestoreLinkspostmethod
+    - ShortlyapiLinksToggleLinkPrivacyoptionsmethod
+    - ShortlyapiLinksToggleLinkPrivacyputmethod
+    - ShortlyapiLinksVerifyLinkPasswordgetmethod
+    - ShortlyapiLinksVerifyLinkPasswordoptionsmethod
+    - ShortlyapiLinksdeletemethod
+    - ShortlyapiLinksoptionsmethod
+    - ShortlyapiLinkspostmethod
+    - ShortlyapiMailingListoptionsmethod
+    - ShortlyapiMailingListpostmethod
+    - ShortlyapiMailoptionsmethod
+    - ShortlyapiMailpostmethod
+    - ShortlyapiNotifCheckUnreadNotificationsoptionsmethod
+    - ShortlyapiNotifCheckUnreadNotificationspostmethod
+    - ShortlyapiNotifMarkAsReadoptionsmethod
+    - ShortlyapiNotifMarkAsReadputmethod
+    - ShortlyapiNotifSendFriendRequestoptionsmethod
+    - ShortlyapiNotifSendFriendRequestpostmethod
+    - ShortlyapiNotifgetmethod
+    - ShortlyapiNotifoptionsmethod
+    - ShortlyapiNotifpostmethod
+    - ShortlyapiOptionsmethod
+    - ShortlyapiUserAchoptionsmethod
+    - ShortlyapiUsersBanUseroptionsmethod
+    - ShortlyapiUsersBanUserputmethod
+    - ShortlyapiUsersGetActiveFriendsgetmethod
+    - ShortlyapiUsersGetActiveFriendsoptionsmethod
+    - ShortlyapiUsersGetAllActiveUsersgetmethod
+    - ShortlyapiUsersGetAllActiveUsersoptionsmethod
+    - ShortlyapiUsersGetAllUsersWithStatsoptionsmethod
+    - ShortlyapiUsersGetAllUsersWithStatspostmethod
+    - ShortlyapiUsersGetUserByIdoptionsmethod
+    - ShortlyapiUsersGetUserByIdpostmethod
+    - ShortlyapiUsersGetUserFriendsgetmethod
+    - ShortlyapiUsersGetUserFriendsoptionsmethod
+    - ShortlyapiUsersGetUserLinksoptionsmethod
+    - ShortlyapiUsersGetUserLinkspostmethod
+    - ShortlyapiUsersGetUsersMailingListsgetmethod
+    - ShortlyapiUsersGetUsersMailingListsoptionsmethod
+    - ShortlyapiUsersIsUserAdmingetmethod
+    - ShortlyapiUsersIsUserAdminoptionsmethod
+    - ShortlyapiUsersPostCreateUseroptionsmethod
+    - ShortlyapiUsersPostCreateUserpostmethod
+    - ShortlyapiUsersoptionsmethod
+    - ShortlyapiUsersputmethod
+    Properties:
+      RestApiId:
+        Ref: Shortlyapirestapi
+  Shortlyapiprodstage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: prod
+      RestApiId:
+        Ref: Shortlyapirestapi
+      DeploymentId:
+        Ref: Shortlyapideployment20250624155921
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway Invoke URL
+    Value:
+      Fn::Sub: https://${Shortlyapirestapi}.execute-api.${AWS::Region}.amazonaws.com/prod
