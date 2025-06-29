@@ -1,0 +1,135 @@
+header.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1030; /* above most page content but below any modals */
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+}
+
+.main {
+  margin-top: 3rem;
+}
+
+header.navbar .container {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+header.navbar .search-input {
+  flex-grow: 1;
+  margin: 0 1rem;
+}
+
+header.navbar .btn {
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Offcanvas panel scroll & sizing */
+.offcanvas {
+  width: 300px;
+}
+.offcanvas-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Section headers inside offcanvas */
+.offcanvas-body h6 {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* Friend‐request and friend cards */
+.friend-request-card,
+.friend-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+.friend-request-card img,
+.friend-card img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.friend-request-info,
+.friend-info {
+  flex-grow: 1;
+  margin: 0 0.5rem;
+}
+.friend-request-actions button {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.notification-container {
+  position: relative;
+  display: inline-block; /* Or 'block', depending on layout */
+}
+
+/* The dot itself */
+.notification-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #dc3545; /* Bootstrap's danger red */
+  border-radius: 50%;
+  border: 2px solid white; /* Makes it stand out from the button background */
+  
+  /* To help with visibility if the button moves */
+  transform: translate(25%, -25%);
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #e9ecef; /* Lighter border */
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.notification-card:hover {
+  background-color: #f8f9fa; /* Subtle hover effect */
+}
+
+.notification-card .notification-text {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Make sure the friend request card is NOT clickable */
+.friend-request-card {
+  cursor: default;
+}
+
+/* Add this to css/global.css */
+
+#passwordAccessModal .modal-content {
+    border-radius: 0.75rem;
+}
+
+#passwordAccessModal #accessPasswordInput.is-invalid {
+    border-color: #dc3545;
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}

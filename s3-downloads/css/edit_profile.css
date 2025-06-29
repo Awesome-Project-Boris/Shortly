@@ -1,0 +1,93 @@
+/* edit_profile.css */
+
+/* --- Main Container --- */
+/* Using the existing .table-card for the main form container */
+.table-card {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2.5rem; /* Increased padding for more whitespace */
+  background-color: #ffffff;
+  border: 1px solid #e9ecef; /* Softer border color */
+  border-radius: 0.75rem; /* Softer corners */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07); /* Deeper, softer shadow */
+  overflow: visible !important;
+}
+
+/* --- Typography --- */
+.table-card .main-title {
+  font-size: 2.25rem; /* Slightly smaller for better balance */
+  font-weight: 600;
+  margin-bottom: 2rem; /* More space below the title */
+}
+
+.edit-profile-form label {
+  font-weight: 500;
+  color: #495057; /* Darker gray for better contrast */
+  margin-bottom: 0.5rem;
+}
+
+/* --- Form Elements --- */
+.edit-profile-form .form-control,
+.edit-profile-form .form-select {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem; /* Consistent border radius */
+  border: 1px solid #ced4da;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.edit-profile-form .form-control:focus,
+.edit-profile-form .form-select:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* --- Image Upload Section --- */
+.profile-image-preview {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffffff; /* White border to lift it off the background */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); /* More prominent shadow */
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-image-preview:hover {
+  transform: scale(1.05); /* Grow effect on hover */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.75);
+  display: none; /* Hidden by default */
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  pointer-events: none; /* Allow clicks to go through to the input */
+}
+
+/* --- Buttons --- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* --- Media Queries for Responsiveness --- */
+@media (max-width: 576px) {
+  .table-card {
+    padding: 1.5rem;
+  }
+  .table-card .main-title {
+    font-size: 1.75rem;
+  }
+}

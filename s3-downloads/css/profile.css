@@ -1,0 +1,207 @@
+/* profile.css */
+
+/* —————————————————————————
+   PROFILE INFO CARD
+   ————————————————————————— */
+.profile-info {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 800px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* PROFILE PICTURE */
+.profile-pic {
+  width: 280px;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  border: 4px solid #e9f5ff;
+}
+
+/* USERNAME & SUB-HEADER */
+#userName {
+  font-size: 2.25rem;
+  color: #007bff;
+  margin-bottom: 0.25rem;
+}
+#user-name {
+  font-size: 1.25rem;
+  color: #6c757d;
+  margin-bottom: 1.25rem;
+}
+
+/* PROFILE DETAILS GRID */
+.profile-info .details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem 2rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+.profile-info .details p {
+  margin: 0;
+  font-size: 1rem;
+  color: #444;
+}
+.profile-info .details p span {
+  display: block;
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 0.25rem;
+}
+
+/* FRIEND REQUEST BUTTON */
+#friendRequestBtn {
+  border-radius: 2rem;
+  padding: 0.5rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease;
+}
+#friendRequestBtn:hover {
+  background-color: #0056b3;
+}
+
+/* —————————————————————————
+   SECTION HEADER & DIVIDER
+   ————————————————————————— */
+.section-header {
+  text-align: center;
+  margin: 2rem 0 1rem;
+}
+.section-title {
+  font-size: 1.75rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+.divider {
+  width: 60%;
+  max-width: 500px;
+  height: 2px;
+  margin: 0 auto;
+  border: none;
+  background-color: #e0e0e0;
+}
+
+/* —————————————————————————
+   HIDE “Visible/Private” FOR VISITORS
+   ————————————————————————— */
+.visibility-col {
+  display: none;
+}
+.owner-view .visibility-col {
+  display: table-cell;
+}
+
+/* —————————————————————————
+   ACHIEVEMENTS SECTION
+   ————————————————————————— */
+.achievements-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+}
+.achievement-card {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+.achievement-card:hover {
+  transform: translateY(-4px);
+}
+.achievement-card img {
+  width: 150px;
+  height: 150px;
+  border-radius: 10%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+.achievement-card .username {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.achievement-card .link-name {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+.achievement-card .clicks,
+.achievement-card .date {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+/* In Shortly/css/profile.css */
+
+/* --- Link Statistics Modal Styling --- */
+
+#countryStatsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Space between bars */
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 10px; /* Space for scrollbar */
+}
+
+.stat-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #e9f5ff; /* A light, on-brand blue */
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  color: #0056b3; /* A darker, readable blue */
+  font-weight: 500;
+
+  /* Animation for the bars appearing */
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: growBar 0.5s forwards;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Delay animation for each subsequent bar to create a staggered effect */
+.stat-bar:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.stat-bar:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.stat-bar:nth-child(4) {
+  animation-delay: 0.15s;
+}
+.stat-bar:nth-child(5) {
+  animation-delay: 0.2s;
+}
+/* Add more if you expect more than 5 countries regularly */
+
+@keyframes growBar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.stat-bar span:first-child {
+  /* Country name */
+  white-space: nowrap;
+}
+
+.stat-bar span:last-child {
+  /* Click count */
+  font-weight: 700;
+  padding-left: 1rem;
+}
