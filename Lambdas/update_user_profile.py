@@ -3,94 +3,85 @@ import boto3
 import os
 from botocore.exceptions import ClientError
 
-# Initialize DynamoDB and S3 clients
+# --- Initialize AWS Clients ---
 dynamodb = boto3.resource('dynamodb')
-s3_client = boto3.client('s3')
 
-# Fetch table and bucket names from environment variables
+# --- Environment Variables ---
 USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users')
-UPLOAD_BUCKET_NAME = os.environ.get('UPLOAD_BUCKET_NAME')
+users_table = dynamodb.Table(USERS_TABLE_NAME)
+
+def _make_response(status_code, body):
+    """Creates a fully CORS-compliant API response."""
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,GET,DELETE'
+        },
+        'body': json.dumps(body)
+    }
 
 def lambda_handler(event, context):
     """
-    Updates a user's profile in DynamoDB. If a new picture is provided,
-    this function also deletes the old picture from the S3 bucket after
-    a successful database update.
-    
-    Expects a JSON body with:
-    - userId (string): The ID of the user to update.
-    - updateData (dict): A dictionary with fields to update (e.g., {'FullName': 'new name'}).
-    - oldPictureKey (string, optional): The S3 key of the old picture to be deleted.
+    Updates user profile information in DynamoDB.
+    This version NO LONGER deletes anything from S3.
     """
-
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,PUT"
-    }
+    # --- CORS Preflight Handling ---
+    if event.get('httpMethod') == 'OPTIONS':
+        return _make_response(200, {})
 
     try:
-        if not UPLOAD_BUCKET_NAME:
-            raise ValueError("UPLOAD_BUCKET_NAME environment variable is not set.")
-
         body = json.loads(event.get('body', '{}'))
         user_id = body.get('userId')
-        update_data = body.get('updateData')
-        old_picture_key = body.get('oldPictureKey')
 
-        if not user_id or not update_data:
-            return {
-                'statusCode': 400,
-                'headers': cors_headers,
-                'body': json.dumps({'message': 'Missing userId or updateData in request body.'})
-            }
+        if not user_id:
+            return _make_response(400, {'message': 'Request must include "userId".'})
 
-        table = dynamodb.Table(USERS_TABLE_NAME)
-
-        # --- Construct DynamoDB Update Expression ---
-        # This dynamically builds the update expression based on the keys in updateData
+        # --- Build Update Expression for DynamoDB ---
         update_expression_parts = []
         expression_attribute_values = {}
-        for key, value in update_data.items():
-            # Use placeholders to avoid issues with reserved keywords
-            update_expression_parts.append(f"#{key} = :{key}")
-            expression_attribute_values[f":{key}"] = value
         
-        # We need ExpressionAttributeNames because some keys might be reserved words
-        expression_attribute_names = {f"#{key}": key for key in update_data.keys()}
-        
+        # Check for FullName and add to the update expression if present
+        if 'FullName' in body:
+            update_expression_parts.append("FullName = :fn")
+            expression_attribute_values[':fn'] = body['FullName']
+            
+        # Check for Country and add to the update expression if present
+        if 'Country' in body:
+            update_expression_parts.append("Country = :c")
+            expression_attribute_values[':c'] = body['Country']
+            
+        # Check for Picture and add to the update expression if present
+        if 'Picture' in body:
+            update_expression_parts.append("Picture = :p")
+            expression_attribute_values[':p'] = body['Picture']
+            
+        if not update_expression_parts:
+            return _make_response(400, {'message': 'No fields to update provided.'})
+            
         update_expression = "SET " + ", ".join(update_expression_parts)
 
-        # --- Update DynamoDB Item ---
-        table.update_item(
+        # --- Perform the DynamoDB Update ---
+        print(f"Updating profile for user: {user_id}")
+        users_table.update_item(
             Key={'UserId': user_id},
             UpdateExpression=update_expression,
-            ExpressionAttributeNames=expression_attribute_names,
-            ExpressionAttributeValues=expression_attribute_values
+            ExpressionAttributeValues=expression_attribute_values,
+            ConditionExpression="attribute_exists(UserId)"
         )
-
-        # --- Cleanup: Delete Old S3 Object (if applicable) ---
-        # This part runs only if the database update was successful AND an old key was provided.
-        if old_picture_key:
-            print(f"Database updated. Deleting old picture with key: {old_picture_key}")
-            try:
-                s3_client.delete_object(Bucket=UPLOAD_BUCKET_NAME, Key=old_picture_key)
-                print("Old picture deleted successfully.")
-            except ClientError as e:
-                # Log the error, but don't fail the whole request since the main goal (DB update) succeeded.
-                # You might want to add more robust monitoring here for cleanup failures.
-                print(f"Error deleting old picture from S3: {e}")
-
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'User profile updated successfully.'})
-        }
+        
+        return _make_response(200, {'message': 'Profile updated successfully.'})
 
     except ClientError as e:
-        print(f"DynamoDB ClientError: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'A database error occurred.'})}
-    except Exception as e:
-        print(f"Error: {e}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'message': 'An unexpected server error occurred.'})}
+        if e.response['Error']['Code'] == "ConditionalCheckFailedException":
+            return _make_response(404, {'message': f"User with ID '{user_id}' not found."})
+        print(f"DynamoDB Error: {e.response['Error']['Message']}")
+        return _make_response(500, {'message': 'A database error occurred.'})
 
+    except (json.JSONDecodeError, TypeError):
+        return _make_response(400, {'message': 'Invalid JSON format in request body.'})
+
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return _make_response(500, {'message': 'An unexpected server error occurred.'})

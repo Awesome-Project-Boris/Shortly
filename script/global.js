@@ -39,12 +39,13 @@ function buildNavBar() {
   // Attach event handlers
   header.querySelector("#nav-home").onclick = () => window.location.href = "index.html";
 
+  // MODIFIED: Event listener for the search bar
   header.querySelector("#nav-search").addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const q = e.target.value.trim().toLowerCase();
-      localStorage.setItem("searchQuery", q);
-      window.location.href = "index.html";
+      // Redirect to the index page with the search term as a query string parameter
+      window.location.href = `index.html?q=${encodeURIComponent(q)}`;
     }
   });
 
@@ -98,29 +99,30 @@ function buildNavBar() {
       </div>`);
   }
 
- const offcanvasEl = document.getElementById("friendsOffcanvas");
+  const offcanvasEl = document.getElementById("friendsOffcanvas");
   // This now handles marking notifications as read AND loading content.
   offcanvasEl.addEventListener("show.bs.offcanvas", async () => {
-    const container = document.getElementById("nav-friends-container");
-    const dot = container.querySelector('.notification-dot');
-    if (dot) dot.remove();
+    // First, we ensure the offcanvas content is loaded.
+    try {
+      await loadOffcanvasContent(); // <-- Await the async function properly
 
-    if (currentUserID) {
-      // First, tell the server to mark notifications as read. We 'await' this
-      // to ensure it completes before we fetch new data.
-      try {
+      const container = document.getElementById("nav-friends-container");
+      const dot = container.querySelector('.notification-dot');
+      if (dot) dot.remove();
+
+      if (currentUserID) {
+        // Second, we send a request to mark notifications as read.
         await fetch(API + 'notif/mark-as-read', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUserID })
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserID })
         });
-      } catch (error) {
-          console.error('Error sending mark as read request:', error);
       }
+    } catch (error) {
+      console.error('Error loading content or marking as read:', error);
     }
-    // NOW, after the mark-as-read is done, load the content.
-    loadOffcanvasContent();
   });
+
 }
 
 
@@ -170,7 +172,8 @@ async function loadOffcanvasContent() {
     if (!notificationsResp.ok) throw new Error("Failed to fetch notifications");
 
     const data = await notificationsResp.json();
-
+    console.log("Notifications data:", data);
+    console.log("otherNotifications data:", data.otherNotifications);
     renderFriendRequests(data.friendRequests || []);
     renderOtherNotifications(data.otherNotifications || []);
 
@@ -217,6 +220,7 @@ function renderFriendRequests(requests) {
 }
 
 function renderOtherNotifications(notifications) {
+  console.log("Rendering other notifications:", notifications);
   const container = document.getElementById("generalNotificationsContainer");
   if (!notifications || notifications.length === 0) {
     container.innerHTML = '<div class="text-muted small p-2">No new notifications.</div>';
@@ -228,7 +232,12 @@ function renderOtherNotifications(notifications) {
     const card = document.createElement("div");
     card.className = "notification-card";
     card.innerHTML = `<p class="notification-text mb-0">${note.Text}</p>`;
-    card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
+    //card.innerHTML = `${note.LinkId}`;
+    if (note.FromUserId == null || note.FromUserId == "" || note.FromUserId.length == 0) {
+      card.onclick = () => window.location.href = `profile.html?userID=${currentUserID}`;
+    } else {
+      card.onclick = () => window.location.href = `profile.html?userID=${note.FromUserId}`;
+    }
     container.appendChild(card);
   });
 }
@@ -236,7 +245,7 @@ function renderOtherNotifications(notifications) {
 async function respondToRequest(notificationID, accept, cardEl) {
   try {
     // This fetch call is already using POST with a body, so it's correct.
-    const resp = await fetch(`${API}users/respond-friend-request`, {
+    const resp = await fetch(`${API}links/respond-friend-request`, {
       // method: "POST",
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -268,7 +277,10 @@ async function loadFriendsList() {
     });
     if (!resp.ok) throw new Error("Failed to fetch friends list");
     const data = await resp.json();
-    const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+    //const friends = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+    console.log(data);
+    const friends = data.friends || []; // Adjust based on your API response structure
+    console.log(friends);
 
     if (!friends || friends.length === 0) {
       container.innerHTML = '<div class="text-muted small p-2">You have no friends yet.</div>';
@@ -280,9 +292,9 @@ async function loadFriendsList() {
       const card = document.createElement("div");
       card.className = "friend-card"; // This is a clickable card
       card.innerHTML = `
-                <img src="${u.picture || 'https://placehold.co/40x40/6c757d/FFFFFF?text=??'}" alt="${u.username}" class="rounded-circle" width="40" height="40"/>
-                <div class="friend-info ms-2">${u.username}</div>`;
-      card.onclick = () => window.location.href = `profile.html?userID=${u.userID}`;
+                <img src="${u.Picture || 'https://placehold.co/40x40/6c757d/FFFFFF?text=??'}" alt="${u.Username}" class="rounded-circle" width="40" height="40"/>
+                <div class="friend-info ms-2">${u.Username}</div>`;
+      card.onclick = () => window.location.href = `profile.html?userID=${u.UserId}`;
       container.appendChild(card);
     });
   } catch (e) {

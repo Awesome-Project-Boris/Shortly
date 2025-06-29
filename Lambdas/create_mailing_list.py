@@ -1,114 +1,109 @@
-import os  # for reading environment variables
-import json  # for parsing and serializing JSON
-import uuid  # for generating unique identifiers
-import boto3  # AWS SDK for Python (Boto3)
-from botocore.exceptions import ClientError  # to catch DynamoDB-specific errors
+import os
+import json
+import uuid
+import boto3
+from botocore.exceptions import ClientError
 
 # --- Initialize DynamoDB resource ---
-# Uses IAM role or environment-based AWS credentials
 dynamodb = boto3.resource('dynamodb')
-# Table names can be overridden via Lambda environment variables
-MAILING_LIST_TABLE = os.environ.get('MAILING_LIST_TABLE', 'Mailing_Lists')
-USERS_TABLE = os.environ.get('USERS_TABLE', 'Users')
-
+MAILING_LISTS_TABLE_NAME = os.environ.get('MAILING_LISTS_TABLE_NAME', 'Mailing_Lists')
+USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users')
 
 def lambda_handler(event, context):
     """
     AWS Lambda function to create a new mailing list.
-
-    Expected JSON body parameters:
-      - UserId (string): initiator of the mailing list
-      - RecipientIds (list of strings): UserIds to include as recipients
-      - ListName (string, optional): descriptive name for the list
-
-    Workflow:
-      1. Parse and validate input JSON
-      2. Lookup each recipient's email in the Users table
-      3. Generate a unique ListId
-      4. Assemble the mailing-list item
-      5. Persist to the MailingList table
-      6. Return success or appropriate error response
+    Accepts a list of friend IDs and a list of loose emails,
+    combines them, and saves the group.
     """
-    # --- 1. Parse and validate input JSON ---
+    
+    cors_headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "OPTIONS,POST"
+    }
+
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({'message': 'CORS pre-flight check successful.'})
+        }
+
     try:
-        raw_body = event.get('body', {})
-        # API Gateway may pass body as a JSON string or already-parsed dict
+        raw_body = event.get('body', '{}')
         body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
 
-        # Required parameters
-        initiator_id = body['UserId']
-        recipient_ids = body['RecipientIds']
-        # Optional parameter with default
-        list_name = body.get('ListName', '')
+        initiator_id = body['initiatorId']
+        list_name = body.get('name', '')
+        # Accept both lists from the front-end
+        recipient_ids = body.get('recipientsIds', [])
+        loose_emails = body.get('recipientsEmails', [])
 
-        # Validate that RecipientIds is indeed a list
-        if not isinstance(recipient_ids, list):
-            raise ValueError('RecipientIds must be a list of user IDs')
+        if not isinstance(recipient_ids, list) or not isinstance(loose_emails, list):
+            raise ValueError('recipientsIds and recipientsEmails must be lists.')
 
     except (KeyError, TypeError, json.JSONDecodeError, ValueError) as e:
-        # Return HTTP 400 Bad Request for missing or invalid input
         return {
             'statusCode': 400,
+            'headers': cors_headers,
             'body': json.dumps({'error': f'Missing or invalid input: {e}'})
         }
 
-    # Reference the Users table for email lookups
-    users_table = dynamodb.Table(USERS_TABLE)
-    recipients = []  # will hold valid recipient {UserId, Email} dicts
+    # Use a set to automatically handle duplicate emails
+    final_email_set = set(email.lower() for email in loose_emails)
 
-    # --- 2. Fetch each recipient's email ---
-    for uid in recipient_ids:
+    # --- Fetch emails for the provided friend IDs ---
+    if recipient_ids:
         try:
-            # Retrieve user record by primary key UserId
-            resp = users_table.get_item(Key={'UserId': uid})
-            user_item = resp.get('Item')
-            # Only include if record exists and has an Email attribute
-            if user_item and 'Email' in user_item:
-                recipients.append({'UserId': uid, 'Email': user_item['Email']})
-        except ClientError:
-            # Skip this UID on any DynamoDB error (e.g., permissions)
-            continue
+            keys_to_get = [{'UserId': uid} for uid in recipient_ids]
+            if keys_to_get: # Only run batch_get if there are keys
+                response = dynamodb.batch_get_item(
+                    RequestItems={USERS_TABLE_NAME: {'Keys': keys_to_get}}
+                )
+                users_found = response.get('Responses', {}).get(USERS_TABLE_NAME, [])
+                for user_item in users_found:
+                    if 'Email' in user_item:
+                        final_email_set.add(user_item['Email'].lower())
+        except ClientError as e:
+            err_msg = e.response.get('Error', {}).get('Message', str(e))
+            return {
+                'statusCode': 500,
+                'headers': cors_headers,
+                'body': json.dumps({'error': f'Failed to retrieve recipients: {err_msg}'})
+            }
+            
+    if not final_email_set:
+        return {
+            'statusCode': 400,
+            'headers': cors_headers,
+            'body': json.dumps({'error': 'A group must contain at least one recipient.'})
+        }
 
-    # --- 3. Generate unique mailing-list ID ---
-    list_id = str(uuid.uuid4())  # UUID ensures low collision risk
-
-    # --- 4. Assemble the DynamoDB item ---
+    # --- Assemble and persist the new mailing list ---
+    list_id = str(uuid.uuid4())
     ml_item = {
         'ListId': list_id,
         'InitiatorId': initiator_id,
         'ListName': list_name,
-        'RecipientsEmails': recipients  # list of {'UserId', 'Email'}
+        # CORRECTED: This now saves a simple list of email strings
+        'RecipientsEmails': list(final_email_set) 
     }
-
-    # --- 5. Persist the new mailing list to DynamoDB ---
-    ml_table = dynamodb.Table(MAILING_LIST_TABLE)
+    ml_table = dynamodb.Table(MAILING_LISTS_TABLE_NAME)
+    
     try:
         ml_table.put_item(Item=ml_item)
     except ClientError as e:
-        # Return HTTP 500 if DynamoDB write fails
         err_msg = e.response.get('Error', {}).get('Message', str(e))
         return {
             'statusCode': 500,
+            'headers': cors_headers,
             'body': json.dumps({'error': f'Failed to create mailing list: {err_msg}'})
         }
 
-    # --- 6. Return HTTP 201 Created with details ---
+    # --- Return HTTP 201 Created with the new ListId ---
     return {
         'statusCode': 201,
-        'body': json.dumps({'ListId': list_id, 'RecipientsCount': len(recipients)})
+        'headers': cors_headers,
+        'body': json.dumps({'ListId': list_id, 'RecipientsCount': len(final_email_set)})
     }
-        
-# Create a mock event with test data
-# test_event = {
-    # 'body': {
-    #     'UserId': 'Allie1',
-    #     'RecipientIds': ['d4', 'Chuck3'],
-    #     'ListName': 'Test Mailing List'
-    # }
-# }
 
-# # Call the lambda handler with the test event
-# result = lambda_handler(test_event, None)
-
-# # Print the result
-# print(json.dumps(result, indent=2))

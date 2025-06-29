@@ -7,45 +7,49 @@ from botocore.exceptions import ClientError
 # Initialize the S3 client
 s3_client = boto3.client('s3')
 
+def _make_response(status_code, body):
+    """
+    Centralized function to create API responses with full CORS headers.
+    """
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            # MODIFIED: Added more allowed methods for maximum compatibility
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,DELETE'
+        },
+        'body': json.dumps(body)
+    }
+
 def lambda_handler(event, context):
     """
-    Generates a pre-signed S3 URL for securely uploading a file.
-    The client sends a content type, and this function returns a URL
-    that can be used to PUT the file directly into the S3 bucket.
-
-    Expects a JSON body with:
-    - contentType (string): The MIME type of the file (e.g., 'image/jpeg').
+    Generates a pre-signed S3 URL for securely uploading a file,
+    with robust CORS handling.
     """
     
+    # --- CORS Preflight Handling ---
+    # This block handles the browser's initial OPTIONS request,
+    # which is essential for CORS to work correctly.
+    if event.get('httpMethod') == 'OPTIONS':
+        return _make_response(204, {})
+
     # --- Configuration ---
-    # Fetch the bucket name from an environment variable for security and flexibility.
-    # You must set this environment variable in your Lambda configuration.
     bucket_name = os.environ.get('UPLOAD_BUCKET_NAME')
     if not bucket_name:
         # Fails loudly if the bucket name is not configured
-        raise ValueError("UPLOAD_BUCKET_NAME environment variable is not set.")
+        print("CRITICAL ERROR: UPLOAD_BUCKET_NAME environment variable is not set.")
+        return _make_response(500, {'message': 'Server configuration error: Missing bucket name.'})
 
-    # CORS headers for the response
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,POST"
-    }
-    
     try:
         # Load the content type from the request body
         body = json.loads(event.get('body', '{}'))
         content_type = body.get('contentType')
 
         if not content_type:
-            return {
-                'statusCode': 400,
-                'headers': cors_headers,
-                'body': json.dumps({'message': 'Missing "contentType" in request body.'})
-            }
+            return _make_response(400, {'message': 'Missing "contentType" in request body.'})
 
         # Generate a unique filename using a UUID to prevent overwrites
-        # This key will be the name of the file in your S3 bucket.
         file_key = f"profile-pictures/{uuid.uuid4()}"
 
         # Generate the pre-signed URL for the upload operation
@@ -64,27 +68,15 @@ def lambda_handler(event, context):
         final_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
 
         # Return the pre-signed URL, the file key, and the final public URL
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps({
-                'uploadUrl': presigned_url,
-                'key': file_key,
-                'finalUrl': final_url
-            })
-        }
+        return _make_response(200, {
+            'uploadUrl': presigned_url,
+            'key': file_key,
+            'finalUrl': final_url
+        })
 
     except ClientError as e:
         print(f"Boto3 ClientError: {e}")
-        return {
-            'statusCode': 500,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'An error occurred while generating the upload URL.'})
-        }
+        return _make_response(500, {'message': 'An error occurred while generating the upload URL.'})
     except Exception as e:
         print(f"Error: {e}")
-        return {
-            'statusCode': 500,
-            'headers': cors_headers,
-            'body': json.dumps({'message': 'An unexpected server error occurred.'})
-        }
+        return _make_response(500, {'message': 'An unexpected server error occurred.'})

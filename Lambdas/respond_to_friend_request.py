@@ -3,15 +3,33 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from datetime import datetime
 from uuid import uuid4
+from decimal import Decimal
 
+# DynamoDB setup
 dynamodb = boto3.resource('dynamodb')
 notif_table = dynamodb.Table("Notifications")
 user_table = dynamodb.Table("Users")
 
+# CORS headers
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Origin": "*"
+}
+
+def _decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
 def lambda_handler(event, context):
+    if event.get("httpMethod") == "OPTIONS":
+        return _res(200, {"message": "CORS preflight OK"})
+
     try:
         body = json.loads(event.get("body", "{}"))
-        notification_id = body.get("NotifId")
+        notification_id = body.get("NotifId") or body.get("notificationID")
         accept = bool(body.get("accept", False))
 
         if not notification_id:
@@ -26,7 +44,7 @@ def lambda_handler(event, context):
         from_user = notif["FromUserId"]
         to_user = notif["ToUserId"]
 
-        # Mark original as read and update status
+        # Mark original request as read and update status
         notif_table.update_item(
             Key={"NotifId": notification_id},
             UpdateExpression="SET #s = :s, IsRead = :r",
@@ -43,14 +61,14 @@ def lambda_handler(event, context):
         if not from_data or not to_data:
             return _res(404, "One or both users not found.")
 
-        # Send notification to original sender
+        # Notify the sender
         notif_table.put_item(
             Item={
                 "NotifId": str(uuid4()),
-                "FromUserId": to_user,         # The one responding
-                "ToUserId": from_user,         # The one who sent original request
+                "FromUserId": to_user,
+                "ToUserId": from_user,
                 "Status": "accepted" if accept else "rejected",
-                "IsRead": 0,
+                "IsRead": 1,
                 "Text": f"{to_data.get('Username', 'Someone')} {'accepted' if accept else 'rejected'} your friend request.",
                 "LinkId": "",
                 "Timestamp": datetime.utcnow().isoformat()
@@ -60,10 +78,13 @@ def lambda_handler(event, context):
         if not accept:
             return _res(200, "Friend request rejected.")
 
-        # Add each other as friends
+        # Update friend lists
         def parse_friends(user):
-            raw = user.get("Friends", "")
-            return set(json.loads(raw)) if raw else set()
+            raw = user.get("Friends", "[]")
+            try:
+                return set(json.loads(raw))
+            except:
+                return set()
 
         from_friends = parse_friends(from_data)
         to_friends = parse_friends(to_data)
@@ -85,22 +106,12 @@ def lambda_handler(event, context):
         return _res(200, "Friend request accepted.")
 
     except Exception as e:
-        return _res(500, str(e))
-
+        print("[ERROR]", str(e))
+        return _res(500, f"Unexpected server error: {str(e)}")
 
 def _res(status, message):
     return {
         "statusCode": status,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps({"message": message})
+        "headers": CORS_HEADERS,
+        "body": json.dumps({"message": message}, default=_decimal_default)
     }
-
-
-
-
-
- # Example Request Body for Testing
-        # {
-        #   "NotificationId": "b5a1c0d1-30fd-4022-a3cf-0a2c456789ab",  
-        #   "accept": True
-        # }

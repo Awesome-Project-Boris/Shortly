@@ -12,20 +12,29 @@ USERS_TABLE_NAME = os.environ.get('USERS_TABLE_NAME', 'Users')
 def lambda_handler(event, context):
     """
     Checks if a user is active or banned.
+    This function now explicitly handles OPTIONS pre-flight requests for robust CORS support.
     
     Expects a JSON body with:
     - userId (string): The ID of the user to check.
-    
-    Returns a JSON object:
-    - {'isActive': True} if the user is active or doesn't have the attribute set.
-    - {'isActive': False} if the user is explicitly inactive (banned) or not found.
     """
     
+    # Define a comprehensive set of CORS headers. These will be included in every response.
+    # This allows any domain (*) to call your API and specifies the allowed methods and headers.
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "OPTIONS,POST"
     }
+    
+    # --- NEW: Handle OPTIONS pre-flight request ---
+    # The browser sends this automatically before the actual POST request.
+    # We must respond with a 200 OK and the correct headers.
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({'message': 'CORS pre-flight check successful.'})
+        }
 
     try:
         # Get the userId from the request body
